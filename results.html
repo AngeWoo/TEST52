@@ -62,7 +62,8 @@
         }
 
         .container {
-            max-width: 1400px;
+            width: 95%;
+            max-width: 95vw;
             margin: 0 auto;
             position: relative;
             z-index: 1;
@@ -330,6 +331,10 @@
             box-shadow: var(--shadow-sm);
         }
 
+        .table-container.no-scroll {
+            overflow-x: hidden;
+        }
+
         table {
             width: 100%;
             border-collapse: separate;
@@ -371,6 +376,66 @@
 
         table tr:last-child td {
             border-bottom: none;
+        }
+
+        #rejectDetailTable,
+        #mgrRejectDetailTable {
+            table-layout: fixed;
+            width: 100%;
+            min-width: 0;
+        }
+
+        #rejectDetailTable th,
+        #rejectDetailTable td,
+        #mgrRejectDetailTable th,
+        #mgrRejectDetailTable td {
+            white-space: normal;
+            word-break: break-word;
+            padding: 6px 4px;
+            font-size: 0.78em;
+            line-height: 1.3;
+            vertical-align: top;
+        }
+
+        #rejectDetailTable th,
+        #mgrRejectDetailTable th {
+            font-size: 0.75em;
+            letter-spacing: 0.2px;
+        }
+
+        .month-header {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            line-height: 1.1;
+            gap: 2px;
+        }
+
+        .month-header .year {
+            font-size: 0.78em;
+            opacity: 0.95;
+        }
+
+        .month-header .month {
+            font-size: 0.9em;
+            font-weight: 700;
+        }
+
+        #rejectDetailTable .badge,
+        #mgrRejectDetailTable .badge {
+            padding: 4px 8px;
+            font-size: 0.75em;
+        }
+
+        .cell-clamp-2 {
+            display: block;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            word-break: break-word;
+            line-height: 1.4;
+            max-height: calc(1.4em * 2);
         }
 
         .badge {
@@ -854,7 +919,7 @@
 
             <div class="chart-container">
                 <h2>📋 詳細被駁回統計</h2>
-                <div class="table-container">
+                <div class="table-container no-scroll">
                     <table id="rejectDetailTable">
                         <thead>
                             <tr id="rejectTableHeader">
@@ -939,7 +1004,7 @@
 
             <div class="chart-container">
                 <h2>📋 詳細主管駁回統計</h2>
-                <div class="table-container">
+                <div class="table-container no-scroll">
                     <table id="mgrRejectDetailTable">
                         <thead>
                             <tr id="mgrRejectTableHeader">
@@ -2347,10 +2412,10 @@
             const rows = stats.sortedApplicants.map((app, idx) => {
                 const monthCells = app.monthly_data.map(val => {
                     const style = val > 3 ? 'background: #fff3cd; color: #dc3545; font-weight: bold;' : '';
-                    return `<td style="${style}">${val > 0 ? val : '-'}</td>`;
+                    return `<td style="${style}"><div class="cell-clamp-2">${val > 0 ? val : '-'}</div></td>`;
                 }).join('');
                 const totalStyle = app.total > 3 ? 'background: #fff3cd; color: #dc3545; font-weight: bold;' : '';
-                return `<tr><td><span class="badge">${idx + 1}</span></td><td>${app.company}</td><td>${app.name}</td>${monthCells}<td style="${totalStyle}"><strong>${app.total}</strong></td></tr>`;
+                return `<tr><td><span class="badge">${idx + 1}</span></td><td><div class="cell-clamp-2">${app.company}</div></td><td><div class="cell-clamp-2">${app.name}</div></td>${monthCells}<td style="${totalStyle}"><strong class="cell-clamp-2">${app.total}</strong></td></tr>`;
             }).join('');
             tbody.innerHTML = rows;
         }
@@ -2468,10 +2533,10 @@
             const rows = stats.sortedManagers.map((mgr, idx) => {
                 const monthCells = mgr.monthly_data.map(val => {
                     const style = val > 3 ? 'background: #fff3cd; color: #ff9800; font-weight: bold;' : '';
-                    return `<td style="${style}">${val > 0 ? val : '-'}</td>`;
+                    return `<td style="${style}"><div class="cell-clamp-2">${val > 0 ? val : '-'}</div></td>`;
                 }).join('');
                 const totalStyle = mgr.total > 3 ? 'background: #fff3cd; color: #ff9800; font-weight: bold;' : '';
-                return `<tr><td><span class="badge">${idx + 1}</span></td><td>${mgr.company}</td><td>${mgr.name}</td>${monthCells}<td style="${totalStyle}"><strong>${mgr.total}</strong></td></tr>`;
+                return `<tr><td><span class="badge">${idx + 1}</span></td><td><div class="cell-clamp-2">${mgr.company}</div></td><td><div class="cell-clamp-2">${mgr.name}</div></td>${monthCells}<td style="${totalStyle}"><strong class="cell-clamp-2">${mgr.total}</strong></td></tr>`;
             }).join('');
             tbody.innerHTML = rows;
         }
