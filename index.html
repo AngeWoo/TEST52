@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>華苓表單開立張數統計分析</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft JhengHei', 'PingFang TC', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        .stat-card .label {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .value {
+            color: #333;
+            font-size: 2.5em;
+            font-weight: bold;
+        }
+
+        .stat-card .unit {
+            color: #999;
+            font-size: 0.8em;
+        }
+
+        .stat-card.highlight {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .stat-card.highlight .label,
+        .stat-card.highlight .value,
+        .stat-card.highlight .unit {
+            color: white;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .chart-container h2 {
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 400px;
+        }
+
+        .chart-wrapper.small {
+            height: 300px;
+        }
+
+        .chart-wrapper.large {
+            height: 500px;
+        }
+
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table th {
+            background: #667eea;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        table td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        table tr:hover {
+            background: #f5f5f5;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: bold;
+            background: #667eea;
+            color: white;
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 30px;
+            padding: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .two-column {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .stat-card .value {
+                font-size: 2em;
+            }
+        }
+
+        .insight-box {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .insight-box h3 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .insight-box ul {
+            margin-left: 20px;
+            color: #856404;
+        }
+
+        .insight-box li {
+            margin: 8px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 華苓表單開立張數統計分析</h1>
+            <div class="subtitle">統計期間: 2024年11月 - 2025年11月</div>
+        </div>
+
+        <!-- 關鍵指標 -->
+        <div class="stats-grid">
+            <div class="stat-card highlight">
+                <div class="label">上月總流量 (2025年11月)</div>
+                <div class="value" id="lastMonthTotal">-</div>
+                <div class="unit">筆</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">13個月總流量</div>
+                <div class="value" id="totalForms">-</div>
+                <div class="unit">筆</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">表單種類</div>
+                <div class="value" id="formTypes">-</div>
+                <div class="unit">種</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">月平均流量</div>
+                <div class="value" id="avgMonthly">-</div>
+                <div class="unit">筆</div>
+            </div>
+        </div>
+
+        <!-- 關鍵發現 -->
+        <div class="chart-container">
+            <h2>🔍 關鍵發現與洞察</h2>
+            <div class="insight-box">
+                <h3>統計摘要</h3>
+                <ul id="insights">
+                    <li>載入中...</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 月度趨勢 -->
+        <div class="chart-container">
+            <h2>📈 月度流量趨勢</h2>
+            <div class="chart-wrapper large">
+                <canvas id="monthlyTrendChart"></canvas>
+            </div>
+        </div>
+
+        <!-- 類別分布 -->
+        <div class="two-column">
+            <div class="chart-container">
+                <h2>📊 表單類別分布</h2>
+                <div class="chart-wrapper">
+                    <canvas id="categoryPieChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-container">
+                <h2>🏆 各類別流量統計</h2>
+                <div class="chart-wrapper">
+                    <canvas id="categoryBarChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 熱門表單 -->
+        <div class="chart-container">
+            <h2>🔥 熱門表單 TOP 10</h2>
+            <div class="chart-wrapper large">
+                <canvas id="topFormsChart"></canvas>
+            </div>
+        </div>
+
+        <!-- 類別月度趨勢 -->
+        <div class="chart-container">
+            <h2>📉 各類別月度趨勢</h2>
+            <div class="chart-wrapper large">
+                <canvas id="categoryTrendChart"></canvas>
+            </div>
+        </div>
+
+        <!-- 詳細表單統計 -->
+        <div class="chart-container">
+            <h2>📋 詳細表單統計</h2>
+            <div class="table-container">
+                <table id="detailTable">
+                    <thead>
+                        <tr>
+                            <th>排名</th>
+                            <th>類別</th>
+                            <th>表單名稱</th>
+                            <th>總計</th>
+                            <th>月平均</th>
+                            <th>上月流量</th>
+                            <th>趨勢</th>
+                        </tr>
+                    </thead>
+                    <tbody id="detailTableBody">
+                        <tr><td colspan="7">載入中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 2025 華苓表單統計系統 | 數據更新時間: <span id="updateTime"></span></p>
+        </div>
+    </div>
+
+    <script>
+        // 從JSON載入資料
+        const formData = {"months": ["202411", "202412", "202501", "202502", "202503", "202504", "202505", "202506", "202507", "202508", "202509", "202510", "202511"], "data": [{"category": "人事類", "name": "人員資料更新申請單", "monthly_data": [3, 1, 1, 0, 4, 0, 0, 0, 27, 0, 1, 2, 1], "total": 40}, {"category": "人事類", "name": "人員需求申請表", "monthly_data": [7, 5, 18, 12, 7, 8, 19, 11, 11, 5, 4, 11, 8], "total": 126}, {"category": "人事類", "name": "內部/外部訓練申請表", "monthly_data": [5, 0, 4, 5, 5, 9, 7, 13, 11, 5, 10, 10, 2], "total": 86}, {"category": "人事類", "name": "日常績效表現紀錄表", "monthly_data": [0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 1], "total": 8}, {"category": "人事類", "name": "出差申請單", "monthly_data": [6, 15, 5, 12, 17, 11, 21, 11, 5, 7, 21, 12, 9], "total": 152}, {"category": "人事類", "name": "加班單", "monthly_data": [1340, 1437, 1094, 1137, 1168, 1112, 1093, 1163, 1175, 1154, 1137, 1122, 1006], "total": 15138}, {"category": "人事類", "name": "異動/離職會辦單", "monthly_data": [15, 35, 11, 18, 30, 10, 12, 20, 26, 12, 13, 16, 8], "total": 226}, {"category": "人事類", "name": "新進員工考核表", "monthly_data": [5, 13, 2, 4, 3, 7, 12, 10, 10, 8, 15, 5, 13], "total": 107}, {"category": "人事類", "name": "團體加班單", "monthly_data": [1721, 1620, 1498, 1516, 1772, 1744, 1623, 1592, 1723, 1591, 1497, 1500, 1590], "total": 20987}, {"category": "人事類", "name": "請假單", "monthly_data": [1894, 2371, 1848, 2228, 1922, 1954, 1880, 2020, 2194, 1857, 1841, 1767, 1726], "total": 25502}, {"category": "人事類", "name": "銷假單", "monthly_data": [47, 50, 21, 42, 43, 51, 59, 35, 57, 44, 47, 50, 42], "total": 588}, {"category": "人事類", "name": "績效考核流程", "monthly_data": [0, 934, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "total": 936}, {"category": "公文類", "name": "簽呈申請單", "monthly_data": [107, 112, 83, 78, 73, 81, 65, 90, 121, 61, 68, 90, 107], "total": 1136}, {"category": "企業內部申請單", "name": "一般費用黏貼單", "monthly_data": [1377, 1348, 1040, 1205, 1247, 1198, 1280, 1217, 1323, 1227, 1260, 1231, 1303], "total": 16256}, {"category": "企業內部申請單", "name": "工廠參訪申請單", "monthly_data": [2, 2, 0, 1, 5, 4, 3, 4, 2, 2, 1, 4, 6], "total": 36}, {"category": "企業內部申請單", "name": "內湖團膳申請單", "monthly_data": [103, 132, 81, 107, 127, 117, 124, 122, 160, 129, 153, 144, 139], "total": 1638}, {"category": "企業內部申請單", "name": "外幣_暫借款申請單", "monthly_data": [27, 29, 25, 28, 33, 32, 26, 22, 36, 20, 25, 31, 20], "total": 354}, {"category": "企業內部申請單", "name": "費用報銷單", "monthly_data": [0, 4, 3, 6, 3, 6, 3, 2, 6, 7, 7, 2, 0], "total": 49}, {"category": "企業內部申請單", "name": "資訊服務申請單", "monthly_data": [124, 117, 74, 125, 284, 177, 143, 147, 135, 90, 113, 104, 91], "total": 1724}, {"category": "企業內部申請單", "name": "對外交際費申請單", "monthly_data": [15, 9, 9, 5, 12, 9, 11, 7, 9, 11, 12, 13, 16], "total": 138}, {"category": "企業內部申請單", "name": "暫借款申請單", "monthly_data": [250, 248, 222, 234, 243, 267, 276, 275, 284, 262, 244, 257, 237], "total": 3299}, {"category": "客戶關係管理", "name": "外銷客戶基本資料表", "monthly_data": [4, 1, 1, 2, 1, 1, 2, 2, 1, 0, 2, 0, 0], "total": 17}, {"category": "客戶關係管理", "name": "客戶供應商新增申請單", "monthly_data": [235, 230, 173, 252, 265, 312, 357, 348, 362, 290, 309, 273, 222], "total": 3628}, {"category": "客戶關係管理", "name": "客戶移轉申請單", "monthly_data": [2, 0, 0, 0, 4, 3, 0, 0, 2, 1, 1, 1, 2], "total": 16}, {"category": "客戶關係管理", "name": "客戶資料異動單", "monthly_data": [361, 466, 343, 333, 391, 378, 343, 400, 440, 401, 358, 307, 280], "total": 4801}, {"category": "客戶關係管理", "name": "客訴抱怨處理單", "monthly_data": [7, 10, 5, 11, 10, 8, 5, 7, 5, 5, 12, 13, 7], "total": 105}, {"category": "客戶關係管理", "name": "客訴矯正預防措施追蹤單", "monthly_data": [2, 1, 2, 0, 2, 0, 3, 1, 3, 0, 1, 3, 1], "total": 19}, {"category": "客戶關係管理", "name": "產品禁用物質_審查申請表", "monthly_data": [0, 0, 0, 0, 0, 0, 0, 0, 27, 20, 24, 23, 23], "total": 117}, {"category": "客戶關係管理", "name": "萬洲客戶及授信額度申請單", "monthly_data": [8, 6, 4, 3, 8, 8, 5, 7, 7, 8, 8, 8, 11], "total": 91}, {"category": "研發類", "name": "上膠及製程試機申請單", "monthly_data": [17, 9, 19, 24, 10, 33, 26, 21, 35, 30, 15, 34, 12], "total": 285}, {"category": "研發類", "name": "研發備忘錄", "monthly_data": [2, 2, 1, 10, 9, 10, 22, 16, 4, 9, 16, 8, 3], "total": 112}, {"category": "研發類", "name": "配方單_簽核", "monthly_data": [1, 0, 2, 10, 4, 7, 4, 2, 4, 4, 2, 1, 2], "total": 43}, {"category": "研發類", "name": "萬洲新產品開發申請單", "monthly_data": [3, 0, 1, 1, 7, 0, 0, 6, 1, 0, 0, 1, 0], "total": 20}, {"category": "研發類", "name": "萬洲製程變更申請單", "monthly_data": [0, 1, 0, 2, 0, 1, 3, 3, 3, 2, 0, 0, 1], "total": 16}, {"category": "研發類", "name": "實驗紀錄簿_簽核單", "monthly_data": [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3], "total": 39}, {"category": "研發類", "name": "製膠試機申請單", "monthly_data": [1, 1, 6, 4, 2, 3, 2, 0, 2, 2, 0, 0, 2], "total": 25}, {"category": "資材租借管理", "name": "資材租借申請單", "monthly_data": [0, 108, 288, 364, 394, 311, 390, 349, 395, 388, 455, 355, 382], "total": 4179}, {"category": "資材類", "name": "訂購通知單_簽核", "monthly_data": [615, 604, 516, 520, 652, 554, 528, 489, 627, 531, 593, 553, 729], "total": 7511}, {"category": "資材類", "name": "採購_議比價申請單", "monthly_data": [102, 85, 56, 55, 96, 86, 82, 78, 82, 87, 82, 72, 92], "total": 1055}, {"category": "資材類", "name": "資本支出_驗收報告單", "monthly_data": [75, 67, 39, 35, 57, 48, 52, 51, 65, 43, 56, 60, 47], "total": 695}, {"category": "資材類", "name": "資本支出申請單", "monthly_data": [51, 49, 27, 38, 58, 50, 49, 42, 66, 38, 68, 55, 33], "total": 624}, {"category": "資材類", "name": "資本支出-議比價呈核單", "monthly_data": [61, 33, 18, 44, 42, 45, 37, 37, 49, 31, 53, 49, 28], "total": 527}, {"category": "資材類", "name": "請購(修)申請單", "monthly_data": [469, 417, 396, 416, 493, 444, 466, 513, 593, 495, 536, 506, 444], "total": 6188}]};
+
+        // 計算統計數據
+        function calculateStats() {
+            const months = formData.months;
+            const data = formData.data;
+
+            // 總流量
+            const totalForms = data.reduce((sum, item) => sum + item.total, 0);
+            
+            // 上月流量 (最後一個月)
+            const lastMonthIdx = months.length - 1;
+            const lastMonthTotal = data.reduce((sum, item) => sum + item.monthly_data[lastMonthIdx], 0);
+            
+            // 月平均
+            const avgMonthly = Math.round(totalForms / months.length);
+            
+            // 表單種類
+            const formTypes = data.length;
+
+            // 各類別統計
+            const categoryStats = {};
+            data.forEach(item => {
+                if (!categoryStats[item.category]) {
+                    categoryStats[item.category] = {
+                        total: 0,
+                        forms: [],
+                        monthly: Array(months.length).fill(0)
+                    };
+                }
+                categoryStats[item.category].total += item.total;
+                categoryStats[item.category].forms.push(item.name);
+                item.monthly_data.forEach((val, idx) => {
+                    categoryStats[item.category].monthly[idx] += val;
+                });
+            });
+
+            // 熱門表單
+            const topForms = [...data].sort((a, b) => b.total - a.total).slice(0, 10);
+
+            return {
+                totalForms,
+                lastMonthTotal,
+                avgMonthly,
+                formTypes,
+                categoryStats,
+                topForms,
+                months,
+                data
+            };
+        }
+
+        // 更新關鍵指標
+        function updateKeyMetrics(stats) {
+            document.getElementById('lastMonthTotal').textContent = stats.lastMonthTotal.toLocaleString();
+            document.getElementById('totalForms').textContent = stats.totalForms.toLocaleString();
+            document.getElementById('formTypes').textContent = stats.formTypes;
+            document.getElementById('avgMonthly').textContent = stats.avgMonthly.toLocaleString();
+        }
+
+        // 生成關鍵發現
+        function generateInsights(stats) {
+            const insights = [];
+            
+            insights.push(`上月(2025年11月)EIP電子簽核表單流量為 <strong>${stats.lastMonthTotal.toLocaleString()}</strong> 筆`);
+            
+            // 找出上月流量最大的類別
+            const lastMonthCategories = {};
+            stats.data.forEach(item => {
+                if (!lastMonthCategories[item.category]) {
+                    lastMonthCategories[item.category] = 0;
+                }
+                lastMonthCategories[item.category] += item.monthly_data[stats.months.length - 1];
+            });
+            const topCategory = Object.entries(lastMonthCategories).sort((a, b) => b[1] - a[1])[0];
+            insights.push(`上月流量最大的類別為 <strong>${topCategory[0]}</strong>,共 <strong>${topCategory[1].toLocaleString()}</strong> 筆`);
+            
+            // 熱門表單
+            insights.push(`13個月期間,流量最大的表單為 <strong>${stats.topForms[0].name}</strong>,總計 <strong>${stats.topForms[0].total.toLocaleString()}</strong> 筆`);
+            
+            // 類別統計
+            const categories = Object.entries(stats.categoryStats).sort((a, b) => b[1].total - a[1].total);
+            insights.push(`最活躍的類別為 <strong>${categories[0][0]}</strong>,佔總流量的 <strong>${((categories[0][1].total / stats.totalForms) * 100).toFixed(1)}%</strong>`);
+            
+            // 月平均
+            const monthlyTotals = Array(stats.months.length).fill(0);
+            stats.data.forEach(item => {
+                item.monthly_data.forEach((val, idx) => {
+                    monthlyTotals[idx] += val;
+                });
+            });
+            const maxMonth = Math.max(...monthlyTotals);
+            const minMonth = Math.min(...monthlyTotals);
+            const maxMonthIdx = monthlyTotals.indexOf(maxMonth);
+            const minMonthIdx = monthlyTotals.indexOf(minMonth);
+            insights.push(`流量最高月份為 <strong>${stats.months[maxMonthIdx]}</strong> (${maxMonth.toLocaleString()}筆),最低為 <strong>${stats.months[minMonthIdx]}</strong> (${minMonth.toLocaleString()}筆)`);
+
+            const insightsList = document.getElementById('insights');
+            insightsList.innerHTML = insights.map(insight => `<li>${insight}</li>`).join('');
+        }
+
+        // 創建月度趨勢圖
+        function createMonthlyTrendChart(stats) {
+            const ctx = document.getElementById('monthlyTrendChart').getContext('2d');
+            
+            // 計算每月總流量
+            const monthlyTotals = Array(stats.months.length).fill(0);
+            stats.data.forEach(item => {
+                item.monthly_data.forEach((val, idx) => {
+                    monthlyTotals[idx] += val;
+                });
+            });
+
+            // 格式化月份標籤
+            const labels = stats.months.map(m => {
+                const year = m.substring(0, 4);
+                const month = m.substring(4, 6);
+                return `${year}/${month}`;
+            });
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '每月表單流量',
+                        data: monthlyTotals,
+                        borderColor: 'rgb(102, 126, 234)',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 5,
+                        pointHoverRadius: 7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return '流量: ' + context.parsed.y.toLocaleString() + ' 筆';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 創建類別圓餅圖
+        function createCategoryPieChart(stats) {
+            const ctx = document.getElementById('categoryPieChart').getContext('2d');
+            
+            const categories = Object.entries(stats.categoryStats)
+                .sort((a, b) => b[1].total - a[1].total);
+            
+            const colors = [
+                'rgb(102, 126, 234)',
+                'rgb(118, 75, 162)',
+                'rgb(237, 100, 166)',
+                'rgb(255, 154, 158)',
+                'rgb(250, 208, 196)',
+                'rgb(189, 224, 254)',
+                'rgb(162, 210, 255)'
+            ];
+
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: categories.map(c => c[0]),
+                    datasets: [{
+                        data: categories.map(c => c[1].total),
+                        backgroundColor: colors,
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${label}: ${value.toLocaleString()} 筆 (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 創建類別柱狀圖
+        function createCategoryBarChart(stats) {
+            const ctx = document.getElementById('categoryBarChart').getContext('2d');
+            
+            const categories = Object.entries(stats.categoryStats)
+                .sort((a, b) => b[1].total - a[1].total);
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: categories.map(c => c[0]),
+                    datasets: [{
+                        label: '流量 (筆)',
+                        data: categories.map(c => c[1].total),
+                        backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                        borderColor: 'rgb(102, 126, 234)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return '流量: ' + context.parsed.x.toLocaleString() + ' 筆';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 創建熱門表單圖表
+        function createTopFormsChart(stats) {
+            const ctx = document.getElementById('topFormsChart').getContext('2d');
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: stats.topForms.map(f => f.name),
+                    datasets: [{
+                        label: '總流量 (筆)',
+                        data: stats.topForms.map(f => f.total),
+                        backgroundColor: 'rgba(118, 75, 162, 0.8)',
+                        borderColor: 'rgb(118, 75, 162)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return '總流量: ' + context.parsed.y.toLocaleString() + ' 筆';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 創建類別趨勢圖
+        function createCategoryTrendChart(stats) {
+            const ctx = document.getElementById('categoryTrendChart').getContext('2d');
+            
+            const categories = Object.entries(stats.categoryStats)
+                .sort((a, b) => b[1].total - a[1].total)
+                .slice(0, 5); // 只顯示前5個類別
+
+            const colors = [
+                'rgb(102, 126, 234)',
+                'rgb(118, 75, 162)',
+                'rgb(237, 100, 166)',
+                'rgb(255, 154, 158)',
+                'rgb(189, 224, 254)'
+            ];
+
+            const labels = stats.months.map(m => {
+                const year = m.substring(0, 4);
+                const month = m.substring(4, 6);
+                return `${year}/${month}`;
+            });
+
+            const datasets = categories.map((cat, idx) => ({
+                label: cat[0],
+                data: cat[1].monthly,
+                borderColor: colors[idx],
+                backgroundColor: colors[idx].replace('rgb', 'rgba').replace(')', ', 0.1)'),
+                tension: 0.4,
+                fill: false
+            }));
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.parsed.y.toLocaleString() + ' 筆';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 創建詳細表格
+        function createDetailTable(stats) {
+            const tbody = document.getElementById('detailTableBody');
+            const sortedData = [...stats.data].sort((a, b) => b.total - a.total);
+
+            const rows = sortedData.map((item, idx) => {
+                const avg = Math.round(item.total / stats.months.length);
+                const lastMonth = item.monthly_data[stats.months.length - 1];
+                const prevMonth = item.monthly_data[stats.months.length - 2];
+                
+                let trend = '→';
+                let trendColor = '#666';
+                if (lastMonth > prevMonth) {
+                    trend = '↑';
+                    trendColor = '#28a745';
+                } else if (lastMonth < prevMonth) {
+                    trend = '↓';
+                    trendColor = '#dc3545';
+                }
+
+                return `
+                    <tr>
+                        <td><span class="badge">${idx + 1}</span></td>
+                        <td>${item.category}</td>
+                        <td>${item.name}</td>
+                        <td><strong>${item.total.toLocaleString()}</strong></td>
+                        <td>${avg.toLocaleString()}</td>
+                        <td>${lastMonth.toLocaleString()}</td>
+                        <td style="color: ${trendColor}; font-size: 1.5em;">${trend}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            tbody.innerHTML = rows;
+        }
+
+        // 更新時間
+        function updateTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleString('zh-TW', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            document.getElementById('updateTime').textContent = timeStr;
+        }
+
+        // 初始化
+        function init() {
+            const stats = calculateStats();
+            
+            updateKeyMetrics(stats);
+            generateInsights(stats);
+            createMonthlyTrendChart(stats);
+            createCategoryPieChart(stats);
+            createCategoryBarChart(stats);
+            createTopFormsChart(stats);
+            createCategoryTrendChart(stats);
+            createDetailTable(stats);
+            updateTime();
+        }
+
+        // 執行初始化
+        init();
+    </script>
+</body>
+</html>
