@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>分析結果報告</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f8f9fa; }
+        .alert-panel { background: #fff3cd; border-left: 6px solid #ffc107; padding: 15px; margin-bottom: 25px; border-radius: 4px; }
+        .error-item { color: #856404; margin-bottom: 5px; font-weight: bold; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div style="max-width: 1000px; margin: auto;">
+        <h1>📈 華苓表單數據分析報告</h1>
+
+        <div id="errorDisplay" class="alert-panel" style="display: none;">
+            <h3 style="margin-top: 0;">⚠️ 數據欄位校驗警示</h3>
+            <div id="errorList"></div>
+        </div>
+
+        <div class="card">
+            <h3>202511 關鍵指標</h3>
+            <ul>
+                <li>總開立張數：8,649 張 </li>
+                <li>核心主管簽核次數：822 次 [cite: 3]</li>
+                <li>最大宗表單：請假單 (1,726張) </li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <canvas id="mainChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            const report = JSON.parse(localStorage.getItem('bpmAuditReport'));
+            
+            if (report && report.errors.length > 0) {
+                const display = document.getElementById('errorDisplay');
+                const list = document.getElementById('errorList');
+                display.style.display = 'block';
+                list.innerHTML = report.errors.map(err => `<div class="error-item">• ${err}</div>`).join('');
+            }
+
+            // 初始化圖表 (範例數據) [cite: 2]
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['a.炎洲', 'b.萬洲', 'c.炎洲流通', 'd.炎洲旅館', 'e.炎洲營建'],
+                    datasets: [{
+                        label: '202511 各公司開立量',
+                        data: [3175, 4367, 860, 30, 108], // [cite: 2]
+                        backgroundColor: '#007bff'
+                    }]
+                }
+            });
+        };
+    </script>
+</body>
+</html>

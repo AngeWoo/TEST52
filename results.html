@@ -1,0 +1,2793 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>炎洲集團華苓BPM統計分析</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #0066B3;
+            --primary-dark: #003D6B;
+            --primary-light: #3399CC;
+            --accent-gold: #C9A961;
+            --accent-orange: #E67E22;
+            --bg-gradient-start: #F0F4F8;
+            --bg-gradient-end: #E8EDF2;
+            --card-bg: #FFFFFF;
+            --text-primary: #2C3E50;
+            --text-secondary: #5A6C7D;
+            --border-color: #E0E7EE;
+            --shadow-sm: 0 2px 8px rgba(0, 102, 179, 0.08);
+            --shadow-md: 0 4px 16px rgba(0, 102, 179, 0.12);
+            --shadow-lg: 0 8px 32px rgba(0, 102, 179, 0.16);
+            --shadow-xl: 0 12px 48px rgba(0, 102, 179, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans TC', 'Poppins', -apple-system, sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            background-attachment: fixed;
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image:
+                radial-gradient(circle at 20% 50%, rgba(0, 102, 179, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(201, 169, 97, 0.03) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 100%);
+            padding: 40px 50px;
+            border-radius: 24px;
+            box-shadow: var(--shadow-xl);
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            transform: translate(30%, -30%);
+        }
+
+        .header h1 {
+            color: #FFFFFF;
+            font-size: 2.2em;
+            font-weight: 700;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 1;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .header .subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1em;
+            font-weight: 300;
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header .subtitle::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 16px;
+            background: var(--accent-gold);
+            border-radius: 2px;
+        }
+
+        .tab-nav {
+            background: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: var(--shadow-lg);
+            margin-bottom: 30px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .tab-buttons {
+            display: flex;
+            border-bottom: 2px solid var(--border-color);
+            background: linear-gradient(to bottom, #FFFFFF 0%, #F8FAFB 100%);
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 18px 12px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            color: var(--text-secondary);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+
+        .tab-button::before {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 50%;
+            width: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-blue), var(--primary-light));
+            border-radius: 2px 2px 0 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateX(-50%);
+        }
+
+        .tab-button:hover {
+            color: var(--primary-blue);
+            background: linear-gradient(to bottom, rgba(0, 102, 179, 0.03) 0%, rgba(0, 102, 179, 0.01) 100%);
+        }
+
+        .tab-button.active {
+            color: var(--primary-blue);
+            background: linear-gradient(to bottom, rgba(0, 102, 179, 0.05) 0%, rgba(0, 102, 179, 0.02) 100%);
+        }
+
+        .tab-button.active::before {
+            width: 100%;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 24px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            padding: 32px 28px;
+            border-radius: 20px;
+            box-shadow: var(--shadow-md);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-blue), var(--primary-light));
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+
+        .stat-card .label {
+            color: var(--text-secondary);
+            font-size: 0.88em;
+            margin-bottom: 12px;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+
+        .stat-card .value {
+            color: var(--text-primary);
+            font-size: 2.8em;
+            font-weight: 700;
+            font-family: 'Poppins', sans-serif;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        .stat-card .unit {
+            color: var(--text-secondary);
+            font-size: 0.85em;
+            font-weight: 400;
+        }
+
+        .stat-card.highlight {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 100%);
+            box-shadow: var(--shadow-lg), 0 0 40px rgba(0, 102, 179, 0.15);
+            border: none;
+        }
+
+        .stat-card.highlight::before {
+            background: linear-gradient(90deg, var(--accent-gold), #FFD700);
+        }
+
+        .stat-card.highlight .label,
+        .stat-card.highlight .value,
+        .stat-card.highlight .unit {
+            color: #FFFFFF;
+        }
+
+        .chart-container {
+            background: var(--card-bg);
+            padding: 32px;
+            border-radius: 20px;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 30px;
+            border: 1px solid var(--border-color);
+            transition: box-shadow 0.3s ease;
+        }
+
+        .chart-container:hover {
+            box-shadow: var(--shadow-lg);
+        }
+
+        .chart-container h2 {
+            color: var(--text-primary);
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 3px solid transparent;
+            border-image: linear-gradient(90deg, var(--primary-blue), transparent) 1;
+            font-weight: 700;
+            font-size: 1.4em;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 400px;
+        }
+
+        .chart-wrapper.small {
+            height: 300px;
+        }
+
+        .chart-wrapper.large {
+            height: 500px;
+        }
+
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: var(--card-bg);
+        }
+
+        table th {
+            background: linear-gradient(to bottom, var(--primary-blue) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 16px 14px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.9em;
+            letter-spacing: 0.5px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        table th:first-child {
+            border-radius: 12px 0 0 0;
+        }
+
+        table th:last-child {
+            border-radius: 0 12px 0 0;
+        }
+
+        table td {
+            padding: 14px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.9em;
+            transition: background-color 0.2s ease;
+        }
+
+        table tr:hover td {
+            background: linear-gradient(to right, rgba(0, 102, 179, 0.02) 0%, transparent 100%);
+        }
+
+        table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-light));
+            color: white;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .insight-box {
+            background: linear-gradient(135deg, #FFF9E6 0%, #FFF4D6 100%);
+            border-left: 5px solid var(--accent-gold);
+            padding: 24px 28px;
+            margin: 20px 0;
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .insight-box h3 {
+            color: #8B6914;
+            margin-bottom: 14px;
+            font-weight: 700;
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .insight-box h3::before {
+            content: '💡';
+            font-size: 1.2em;
+        }
+
+        .insight-box ul {
+            margin-left: 20px;
+            color: #6B5610;
+        }
+
+        .insight-box li {
+            margin: 10px 0;
+            line-height: 1.7;
+        }
+
+        .insight-box strong {
+            color: #8B6914;
+            font-weight: 700;
+        }
+
+        .footer {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-top: 40px;
+            padding: 30px 20px;
+            background: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+        }
+
+        @media (max-width: 1024px) {
+            .two-column {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 30px 25px;
+            }
+
+            .header h1 {
+                font-size: 1.6em;
+            }
+
+            .stat-card .value {
+                font-size: 2.2em;
+            }
+
+            .tab-button {
+                font-size: 0.75em;
+                padding: 14px 8px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-container {
+                padding: 20px;
+            }
+
+            .chart-wrapper {
+                height: 300px;
+            }
+
+            .chart-wrapper.large {
+                height: 350px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <h1 style="margin: 0;">📊 炎洲集團華苓BPM統計分析報表</h1>
+                <button onclick="window.location.href='index.html'"
+                    style="background: rgba(255,255,255,0.2); color: white; border: 2px solid rgba(255,255,255,0.5); padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; backdrop-filter: blur(10px); transition: all 0.3s;">
+                    ← 返回上傳
+                </button>
+            </div>
+            <div class="subtitle">檔案: <span id="uploadedFileName">-</span></div>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="tab-nav">
+            <div class="tab-buttons">
+                <button class="tab-button active" onclick="switchTab('monthly')">📅 月度統計分析</button>
+                <button class="tab-button" onclick="switchTab('company')">🏢 公司別統計分析</button>
+                <button class="tab-button" onclick="switchTab('signature')">✍️ 簽核次數統計</button>
+                <button class="tab-button" onclick="switchTab('reject')">❌ 申請人被駁回統計</button>
+                <button class="tab-button" onclick="switchTab('manager-reject')">⚠️ 主管駁回次數統計</button>
+                <button class="tab-button" onclick="switchTab('approval-time')">⏱️ 簽核時間統計</button>
+            </div>
+        </div>
+
+        <!-- Monthly Tab Content -->
+        <div id="monthly-tab" class="tab-content active">
+            <!-- 關鍵指標 -->
+            <div class="stats-grid">
+                <div class="stat-card highlight">
+                    <div class="label">上月總流量 (2025年11月)</div>
+                    <div class="value" id="lastMonthTotal">-</div>
+                    <div class="unit">筆</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">13個月總流量</div>
+                    <div class="value" id="totalForms">-</div>
+                    <div class="unit">筆</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">表單種類</div>
+                    <div class="value" id="formTypes">-</div>
+                    <div class="unit">種</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">月平均流量</div>
+                    <div class="value" id="avgMonthly">-</div>
+                    <div class="unit">筆</div>
+                </div>
+            </div>
+
+            <!-- 關鍵發現 -->
+            <div class="chart-container">
+                <h2>🔍 關鍵發現與洞察</h2>
+                <div class="insight-box">
+                    <h3>統計摘要</h3>
+                    <ul id="insights">
+                        <li>載入中...</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 月度趨勢 -->
+            <div class="chart-container">
+                <h2>📈 月度流量趨勢</h2>
+                <div class="chart-wrapper large">
+                    <canvas id="monthlyTrendChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 類別分布 -->
+            <div class="two-column">
+                <div class="chart-container">
+                    <h2>📊 表單類別分布</h2>
+                    <div class="chart-wrapper">
+                        <canvas id="categoryPieChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <h2>🏆 各類別流量統計</h2>
+                    <div class="chart-wrapper">
+                        <canvas id="categoryBarChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 熱門表單 -->
+            <div class="chart-container">
+                <h2>🔥 熱門表單 TOP 10</h2>
+                <div class="chart-wrapper large">
+                    <canvas id="topFormsChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 類別月度趨勢 -->
+            <div class="chart-container">
+                <h2>📉 各類別月度趨勢</h2>
+                <div class="chart-wrapper large">
+                    <canvas id="categoryTrendChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 詳細表單統計 -->
+            <div class="chart-container">
+                <h2>📋 詳細表單統計</h2>
+                <div class="table-container">
+                    <table id="detailTable">
+                        <thead>
+                            <tr>
+                                <th>排名</th>
+                                <th>類別</th>
+                                <th>表單名稱</th>
+                                <th>總計</th>
+                                <th>月平均</th>
+                                <th>上月流量</th>
+                                <th>趨勢</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detailTableBody">
+                            <tr>
+                                <td colspan="7">載入中...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Company Tab Content -->
+        <div id="company-tab" class="tab-content">
+            <!-- 關鍵指標 -->
+            <div class="stats-grid">
+                <div class="stat-card highlight">
+                    <div class="label">公司總數</div>
+                    <div class="value" id="companyCount">-</div>
+                    <div class="unit">家</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">總流量 (13個月)</div>
+                    <div class="value" id="companyTotalForms">-</div>
+                    <div class="unit">筆</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">最大流量公司</div>
+                    <div class="value" id="topCompany" style="font-size: 1.8em;">-</div>
+                    <div class="unit">流量</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">平均每公司流量</div>
+                    <div class="value" id="avgPerCompany">-</div>
+                    <div class="unit">筆</div>
+                </div>
+            </div>
+
+            <!-- 關鍵發現 -->
+            <div class="chart-container">
+                <h2>🔍 公司別分析摘要</h2>
+                <div class="insight-box">
+                    <h3>統計摘要</h3>
+                    <ul id="companyInsights">
+                        <li>載入中...</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 公司流量分布 -->
+            <div class="two-column">
+                <div class="chart-container">
+                    <h2>🏢 公司流量分布</h2>
+                    <div class="chart-wrapper">
+                        <canvas id="companyPieChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <h2>📊 各公司流量排名</h2>
+                    <div class="chart-wrapper">
+                        <canvas id="companyBarChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 公司類別分析 -->
+            <div class="chart-container">
+                <h2>📈 各公司表單類別分布</h2>
+                <div class="chart-wrapper large">
+                    <canvas id="companyCategoryChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 熱門表單（公司別） -->
+            <div class="chart-container">
+                <h2>🔥 各公司熱門表單 TOP 10</h2>
+                <div class="chart-wrapper large">
+                    <canvas id="companyTopFormsChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 詳細公司統計表 -->
+            <div class="chart-container">
+                <h2>📋 詳細公司統計</h2>
+                <div class="table-container">
+                    <table id="companyDetailTable">
+                        <thead>
+                            <tr id="companyTableHeader">
+                                <th>排名</th>
+                                <th>類別</th>
+                                <th>表單名稱</th>
+                            </tr>
+                        </thead>
+                        <tbody id="companyDetailTableBody">
+                            <tr>
+                                <td colspan="10">載入中...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Signature Tab Content -->
+        <div id="signature-tab" class="tab-content">
+            <!-- 關鍵指標 -->
+            <div class="stats-grid">
+                <div class="stat-card highlight">
+                    <div class="label">上月簽核總次數 (2025年11月)</div>
+                    <div class="value" id="lastMonthSignTotal">-</div>
+                    <div class="unit">次</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">13個月總簽核次數</div>
+                    <div class="value" id="totalSigns">-</div>
+                    <div class="unit">次</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">簽核主管人數</div>
+                    <div class="value" id="managerCount">-</div>
+                    <div class="unit">位</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">月平均簽核次數</div>
+                    <div class="value" id="avgSignMonthly">-</div>
+                    <div class="unit">次</div>
+                </div>
+            </div>
+
+            <!-- 關鍵發現 -->
+            <div class="chart-container">
+                <h2>🔍 簽核統計摘要</h2>
+                <div class="insight-box">
+                    <h3>統計摘要</h3>
+                    <ul id="signInsights">
+                        <li>載入中...</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 主管簽核排名 -->
+            <div class="two-column">
+                <div class="chart-container">
+                    <h2>👥 主管簽核次數排名</h2>
+                    <div class="chart-wrapper">
+                        <canvas id="managerRankChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <h2>📊 簽核次數分布</h2>
+                    <div class="chart-wrapper">
+                        <canvas id="signPieChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 月度簽核趨勢 -->
+            <div class="chart-container">
+                <h2>📈 月度簽核次數趨勢</h2>
+                <div class="chart-wrapper large">
+                    <canvas id="signTrendChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 各主管簽核趨勢 -->
+            <div class="chart-container">
+                <h2>👨‍💼 各主管簽核趨勢對比</h2>
+                <div class="chart-wrapper large">
+                    <canvas id="managerTrendChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 詳細簽核統計 -->
+            <div class="chart-container">
+                <h2>📋 詳細簽核統計</h2>
+                <div class="table-container">
+                    <table id="signDetailTable">
+                        <thead>
+                            <tr id="signTableHeader">
+                                <th>排名</th>
+                                <th>主管姓名</th>
+                            </tr>
+                        </thead>
+                        <tbody id="signDetailTableBody">
+                            <tr>
+                                <td colspan="15">載入中...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Reject Tab Content -->
+        <div id="reject-tab" class="tab-content">
+            <!-- 關鍵指標 -->
+            <div class="stats-grid">
+                <div class="stat-card highlight">
+                    <div class="label">上月被駁回次數 (2025年11月)</div>
+                    <div class="value" id="lastMonthRejectTotal">-</div>
+                    <div class="unit">次</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">13個月總被駁回次數</div>
+                    <div class="value" id="totalRejects">-</div>
+                    <div class="unit">次</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">有駁回記錄人數</div>
+                    <div class="value" id="applicantCount">-</div>
+                    <div class="unit">人</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">被駁回超過3次</div>
+                    <div class="value" id="over3Count">-</div>
+                    <div class="unit">人</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <h2>🔍 被駁回統計摘要</h2>
+                <div class="insight-box">
+                    <h3>統計摘要</h3>
+                    <ul id="rejectInsights">
+                        <li>載入中...</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="two-column">
+                <div class="chart-container">
+                    <h2>👥 申請人被駁回次數排名 TOP 15</h2>
+                    <div class="chart-wrapper">
+                        <canvas id="applicantRankChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <h2>🏢 各公司被駁回次數統計</h2>
+                    <div class="chart-wrapper">
+                        <canvas id="companyRejectChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <h2>📈 月度被駁回次數趨勢</h2>
+                <div class="chart-wrapper large">
+                    <canvas id="rejectTrendChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <h2>⚠️ 被駁回超過3次的申請人</h2>
+                <div class="chart-wrapper large">
+                    <canvas id="over3Chart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <h2>📋 詳細被駁回統計</h2>
+                <div class="table-container">
+                    <table id="rejectDetailTable">
+                        <thead>
+                            <tr id="rejectTableHeader">
+                                <th>排名</th>
+                                <th>公司</th>
+                                <th>申請人姓名</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rejectDetailTableBody">
+                            <tr>
+                                <td colspan="16">載入中...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Manager Reject Tab Content -->
+        <div id="manager-reject-tab" class="tab-content">
+            <div class="stats-grid">
+                <div class="stat-card highlight">
+                    <div class="label">上月主管駁回次數 (2025年11月)</div>
+                    <div class="value" id="lastMonthMgrRejectTotal">-</div>
+                    <div class="unit">次</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">13個月總駁回次數</div>
+                    <div class="value" id="totalMgrRejects">-</div>
+                    <div class="unit">次</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">有駁回記錄主管數</div>
+                    <div class="value" id="mgrRejectCount">-</div>
+                    <div class="unit">位</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">駁回超過3次主管</div>
+                    <div class="value" id="mgrOver3Count">-</div>
+                    <div class="unit">位</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <h2>🔍 主管駁回統計摘要</h2>
+                <div class="insight-box">
+                    <h3>統計摘要</h3>
+                    <ul id="mgrRejectInsights">
+                        <li>載入中...</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="two-column">
+                <div class="chart-container">
+                    <h2>👨‍💼 主管駁回次數排名 TOP 15</h2>
+                    <div class="chart-wrapper">
+                        <canvas id="mgrRejectRankChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <h2>🏢 各公司主管駁回次數統計</h2>
+                    <div class="chart-wrapper">
+                        <canvas id="mgrCompanyRejectChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <h2>📈 月度主管駁回次數趨勢</h2>
+                <div class="chart-wrapper large">
+                    <canvas id="mgrRejectTrendChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <h2>⚠️ 駁回超過3次的主管</h2>
+                <div class="chart-wrapper large">
+                    <canvas id="mgrOver3Chart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <h2>📋 詳細主管駁回統計</h2>
+                <div class="table-container">
+                    <table id="mgrRejectDetailTable">
+                        <thead>
+                            <tr id="mgrRejectTableHeader">
+                                <th>排名</th>
+                                <th>公司</th>
+                                <th>主管姓名</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mgrRejectDetailTableBody">
+                            <tr>
+                                <td colspan="16">載入中...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Approval Time Tab Content -->
+        <div id="approval-time-tab" class="tab-content">
+            <div class="stats-grid">
+                <div class="stat-card highlight">
+                    <div class="label">總簽核記錄數</div>
+                    <div class="value" id="totalApprovalRecords">-</div>
+                    <div class="unit">筆</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">表單總數</div>
+                    <div class="value" id="totalApprovalForms">-</div>
+                    <div class="unit">筆</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">流程超過10關</div>
+                    <div class="value" id="over10FormsCount">-</div>
+                    <div class="unit">筆</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">簽核超過3天</div>
+                    <div class="value" id="over3DaysCount">-</div>
+                    <div class="unit">筆</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <h2>🔍 簽核時間統計摘要</h2>
+                <div class="insight-box">
+                    <h3>統計摘要</h3>
+                    <ul id="approvalTimeInsights">
+                        <li>載入中...</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="two-column">
+                <div class="chart-container">
+                    <h2>👨‍💼 主管平均簽核時間 TOP 15 (最慢)</h2>
+                    <div class="chart-wrapper">
+                        <canvas id="managerTimeChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <h2>🏢 各公司平均簽核時間</h2>
+                    <div class="chart-wrapper">
+                        <canvas id="companyTimeChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <h2>📊 簽核時間分布</h2>
+                <div class="chart-wrapper large">
+                    <canvas id="timeDistributionChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <h2>🔴 流程超過10關的表單</h2>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>表單號碼</th>
+                                <th>主旨</th>
+                                <th>申請單位</th>
+                                <th>申請人</th>
+                                <th>流程關卡數</th>
+                            </tr>
+                        </thead>
+                        <tbody id="over10FormsTableBody">
+                            <tr>
+                                <td colspan="5">載入中...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <h2>⚠️ 簽核時間超過3天的記錄</h2>
+                <div class="chart-wrapper large">
+                    <canvas id="over3DaysChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <h2>📋 各表單簽核時間統計</h2>
+                <div class="table-container">
+                    <table id="formTimeTable">
+                        <thead>
+                            <tr>
+                                <th>排名</th>
+                                <th>表單號碼</th>
+                                <th>主旨</th>
+                                <th>關卡數</th>
+                                <th>總時間</th>
+                                <th>平均每關</th>
+                                <th>最長關卡</th>
+                            </tr>
+                        </thead>
+                        <tbody id="formTimeTableBody">
+                            <tr>
+                                <td colspan="7">載入中...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 2025 華苓表單統計系統 | 數據更新時間: <span id="updateTime"></span></p>
+        </div>
+    </div>
+
+    <script>
+        // 從JSON載入資料
+
+        // ============== 從 sessionStorage 加載數據 ==============
+        let monthlyData, companyData, signatureData, rejectData, managerRejectData, approvalTimeData;
+
+        (function loadDataFromSession() {
+            const storedData = sessionStorage.getItem('bpmAnalysisData');
+            const fileName = sessionStorage.getItem('uploadedFileName');
+
+            if (!storedData) {
+                alert('沒有找到分析數據，請先上傳Excel檔案');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            try {
+                const allData = JSON.parse(storedData);
+
+                // 設置全局變數
+                monthlyData = allData.monthly;
+                companyData = allData.company;
+                signatureData = allData.signature;
+                rejectData = allData.reject;
+                managerRejectData = allData.managerReject;
+                approvalTimeData = allData.approvalTime;
+
+                // 顯示檔案名
+                const fileNameElement = document.getElementById('uploadedFileName');
+                if (fileNameElement) {
+                    fileNameElement.textContent = fileName || '未知';
+                }
+
+                console.log('✓ 數據已從 sessionStorage 加載');
+
+                // 數據加載完成後執行初始化
+                setTimeout(function () {
+                    init();
+                }, 100);
+            } catch (error) {
+                console.error('數據加載失敗:', error);
+                alert('數據格式錯誤，請重新上傳');
+                window.location.href = 'index.html';
+            }
+        })();
+
+        let monthlyCharts = {};
+        let companyCharts = {};
+        let signatureCharts = {};
+        let rejectCharts = {};
+        let managerRejectCharts = {};
+        let approvalTimeCharts = {};
+
+        // Tab切換功能
+        function switchTab(tabName) {
+            // 更新按鈕狀態
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // 更新內容顯示
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(tabName + '-tab').classList.add('active');
+
+            // 初始化對應的圖表（如果尚未初始化）
+            if (tabName === 'monthly' && Object.keys(monthlyCharts).length === 0) {
+                initMonthlyTab();
+            } else if (tabName === 'company' && Object.keys(companyCharts).length === 0) {
+                initCompanyTab();
+            } else if (tabName === 'signature' && Object.keys(signatureCharts).length === 0) {
+                initSignatureTab();
+            } else if (tabName === 'reject' && Object.keys(rejectCharts).length === 0) {
+                initRejectTab();
+            } else if (tabName === 'manager-reject' && Object.keys(managerRejectCharts).length === 0) {
+                initManagerRejectTab();
+            } else if (tabName === 'approval-time' && Object.keys(approvalTimeCharts).length === 0) {
+                initApprovalTimeTab();
+            }
+        }
+
+        // ============== 月度統計功能 ==============
+        function calculateMonthlyStats() {
+            const months = monthlyData.months;
+            const data = monthlyData.data;
+
+            const totalForms = data.reduce((sum, item) => sum + item.total, 0);
+            const lastMonthIdx = months.length - 1;
+            const lastMonthTotal = data.reduce((sum, item) => sum + item.monthly_data[lastMonthIdx], 0);
+            const avgMonthly = Math.round(totalForms / months.length);
+            const formTypes = data.length;
+
+            const categoryStats = {};
+            data.forEach(item => {
+                if (!categoryStats[item.category]) {
+                    categoryStats[item.category] = {
+                        total: 0,
+                        forms: [],
+                        monthly: Array(months.length).fill(0)
+                    };
+                }
+                categoryStats[item.category].total += item.total;
+                categoryStats[item.category].forms.push(item.name);
+                item.monthly_data.forEach((val, idx) => {
+                    categoryStats[item.category].monthly[idx] += val;
+                });
+            });
+
+            const topForms = [...data].sort((a, b) => b.total - a.total).slice(0, 10);
+
+            return {
+                totalForms,
+                lastMonthTotal,
+                avgMonthly,
+                formTypes,
+                categoryStats,
+                topForms,
+                months,
+                data
+            };
+        }
+
+        function updateMonthlyKeyMetrics(stats) {
+            document.getElementById('lastMonthTotal').textContent = stats.lastMonthTotal.toLocaleString();
+            document.getElementById('totalForms').textContent = stats.totalForms.toLocaleString();
+            document.getElementById('formTypes').textContent = stats.formTypes;
+            document.getElementById('avgMonthly').textContent = stats.avgMonthly.toLocaleString();
+        }
+
+        function generateMonthlyInsights(stats) {
+            const insights = [];
+
+            insights.push(`上月(2025年11月)EIP電子簽核表單流量為 <strong>${stats.lastMonthTotal.toLocaleString()}</strong> 筆`);
+
+            const lastMonthCategories = {};
+            stats.data.forEach(item => {
+                if (!lastMonthCategories[item.category]) {
+                    lastMonthCategories[item.category] = 0;
+                }
+                lastMonthCategories[item.category] += item.monthly_data[stats.months.length - 1];
+            });
+            const topCategory = Object.entries(lastMonthCategories).sort((a, b) => b[1] - a[1])[0];
+            insights.push(`上月流量最大的類別為 <strong>${topCategory[0]}</strong>,共 <strong>${topCategory[1].toLocaleString()}</strong> 筆`);
+
+            insights.push(`13個月期間,流量最大的表單為 <strong>${stats.topForms[0].name}</strong>,總計 <strong>${stats.topForms[0].total.toLocaleString()}</strong> 筆`);
+
+            const categories = Object.entries(stats.categoryStats).sort((a, b) => b[1].total - a[1].total);
+            insights.push(`最活躍的類別為 <strong>${categories[0][0]}</strong>,佔總流量的 <strong>${((categories[0][1].total / stats.totalForms) * 100).toFixed(1)}%</strong>`);
+
+            const monthlyTotals = Array(stats.months.length).fill(0);
+            stats.data.forEach(item => {
+                item.monthly_data.forEach((val, idx) => {
+                    monthlyTotals[idx] += val;
+                });
+            });
+            const maxMonth = Math.max(...monthlyTotals);
+            const minMonth = Math.min(...monthlyTotals);
+            const maxMonthIdx = monthlyTotals.indexOf(maxMonth);
+            const minMonthIdx = monthlyTotals.indexOf(minMonth);
+            insights.push(`流量最高月份為 <strong>${stats.months[maxMonthIdx]}</strong> (${maxMonth.toLocaleString()}筆),最低為 <strong>${stats.months[minMonthIdx]}</strong> (${minMonth.toLocaleString()}筆)`);
+
+            document.getElementById('insights').innerHTML = insights.map(insight => `<li>${insight}</li>`).join('');
+        }
+
+        function createMonthlyTrendChart(stats) {
+            const ctx = document.getElementById('monthlyTrendChart').getContext('2d');
+
+            const monthlyTotals = Array(stats.months.length).fill(0);
+            stats.data.forEach(item => {
+                item.monthly_data.forEach((val, idx) => {
+                    monthlyTotals[idx] += val;
+                });
+            });
+
+            const labels = stats.months.map(m => {
+                const year = m.substring(0, 4);
+                const month = m.substring(4, 6);
+                return `${year}/${month}`;
+            });
+
+            monthlyCharts.trend = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '每月表單流量',
+                        data: monthlyTotals,
+                        borderColor: 'rgb(102, 126, 234)',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 5,
+                        pointHoverRadius: 7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return '流量: ' + context.parsed.y.toLocaleString() + ' 筆';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function (value) {
+                                    return value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createCategoryPieChart(stats) {
+            const ctx = document.getElementById('categoryPieChart').getContext('2d');
+
+            const categories = Object.entries(stats.categoryStats)
+                .sort((a, b) => b[1].total - a[1].total);
+
+            const colors = [
+                'rgb(102, 126, 234)',
+                'rgb(118, 75, 162)',
+                'rgb(237, 100, 166)',
+                'rgb(255, 154, 158)',
+                'rgb(250, 208, 196)',
+                'rgb(189, 224, 254)',
+                'rgb(162, 210, 255)'
+            ];
+
+            monthlyCharts.categoryPie = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: categories.map(c => c[0]),
+                    datasets: [{
+                        data: categories.map(c => c[1].total),
+                        backgroundColor: colors,
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${label}: ${value.toLocaleString()} 筆 (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createCategoryBarChart(stats) {
+            const ctx = document.getElementById('categoryBarChart').getContext('2d');
+
+            const categories = Object.entries(stats.categoryStats)
+                .sort((a, b) => b[1].total - a[1].total);
+
+            monthlyCharts.categoryBar = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: categories.map(c => c[0]),
+                    datasets: [{
+                        label: '流量 (筆)',
+                        data: categories.map(c => c[1].total),
+                        backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                        borderColor: 'rgb(102, 126, 234)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return '流量: ' + context.parsed.x.toLocaleString() + ' 筆';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function (value) {
+                                    return value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createTopFormsChart(stats) {
+            const ctx = document.getElementById('topFormsChart').getContext('2d');
+
+            monthlyCharts.topForms = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: stats.topForms.map(f => f.name),
+                    datasets: [{
+                        label: '總流量 (筆)',
+                        data: stats.topForms.map(f => f.total),
+                        backgroundColor: 'rgba(118, 75, 162, 0.8)',
+                        borderColor: 'rgb(118, 75, 162)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return '總流量: ' + context.parsed.y.toLocaleString() + ' 筆';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function (value) {
+                                    return value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createCategoryTrendChart(stats) {
+            const ctx = document.getElementById('categoryTrendChart').getContext('2d');
+
+            const categories = Object.entries(stats.categoryStats)
+                .sort((a, b) => b[1].total - a[1].total)
+                .slice(0, 5);
+
+            const colors = [
+                'rgb(102, 126, 234)',
+                'rgb(118, 75, 162)',
+                'rgb(237, 100, 166)',
+                'rgb(255, 154, 158)',
+                'rgb(189, 224, 254)'
+            ];
+
+            const labels = stats.months.map(m => {
+                const year = m.substring(0, 4);
+                const month = m.substring(4, 6);
+                return `${year}/${month}`;
+            });
+
+            const datasets = categories.map((cat, idx) => ({
+                label: cat[0],
+                data: cat[1].monthly,
+                borderColor: colors[idx],
+                backgroundColor: colors[idx].replace('rgb', 'rgba').replace(')', ', 0.1)'),
+                tension: 0.4,
+                fill: false
+            }));
+
+            monthlyCharts.categoryTrend = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return context.dataset.label + ': ' + context.parsed.y.toLocaleString() + ' 筆';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function (value) {
+                                    return value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createMonthlyDetailTable(stats) {
+            const tbody = document.getElementById('detailTableBody');
+            const sortedData = [...stats.data].sort((a, b) => b.total - a.total);
+
+            const rows = sortedData.map((item, idx) => {
+                const total = Number.isFinite(item.total) ? item.total : 0;
+                const monthCount = stats.months.length || 0;
+                const avg = monthCount > 0 ? Math.round(total / monthCount) : 0;
+                const lastMonth = item.monthly_data[monthCount - 1] ?? 0;
+                const prevMonth = item.monthly_data[monthCount - 2] ?? 0;
+
+                let trend = '→';
+                let trendColor = '#666';
+                if (lastMonth > prevMonth) {
+                    trend = '↑';
+                    trendColor = '#28a745';
+                } else if (lastMonth < prevMonth) {
+                    trend = '↓';
+                    trendColor = '#dc3545';
+                }
+
+                return `
+                    <tr>
+                        <td><span class="badge">${idx + 1}</span></td>
+                        <td>${item.category}</td>
+                        <td>${item.name}</td>
+                        <td><strong>${total.toLocaleString()}</strong></td>
+                        <td>${avg.toLocaleString()}</td>
+                        <td>${lastMonth.toLocaleString()}</td>
+                        <td style="color: ${trendColor}; font-size: 1.5em;">${trend}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            tbody.innerHTML = rows;
+        }
+
+        function initMonthlyTab() {
+            const stats = calculateMonthlyStats();
+
+            updateMonthlyKeyMetrics(stats);
+            generateMonthlyInsights(stats);
+            createMonthlyTrendChart(stats);
+            createCategoryPieChart(stats);
+            createCategoryBarChart(stats);
+            createTopFormsChart(stats);
+            createCategoryTrendChart(stats);
+            createMonthlyDetailTable(stats);
+        }
+
+        // ============== 公司別統計功能 ==============
+        function calculateCompanyStats() {
+            const companies = companyData.companies;
+            const data = companyData.data;
+            const months = companyData.months || [];
+
+            // 計算13個月總流量
+            const totalForms = data.reduce((sum, item) => sum + item.total, 0);
+
+            // 計算當月(最後一個月)的流量
+            const lastMonthIdx = months.length > 0 ? months.length - 1 : 0;
+            let currentMonthTotal = 0;
+
+            const companyStats = {};
+            const currentMonthCompanyStats = {};
+
+            companies.forEach((company, idx) => {
+                companyStats[company] = 0;
+                currentMonthCompanyStats[company] = 0;
+                data.forEach(item => {
+                    companyStats[company] += item.company_data[idx];
+                    // 如果有月度數據,計算當月流量
+                    if (item.monthly_company_data && item.monthly_company_data[lastMonthIdx]) {
+                        currentMonthCompanyStats[company] += item.monthly_company_data[lastMonthIdx][idx] || 0;
+                    }
+                });
+            });
+
+            // 計算當月總流量(如果沒有月度數據,使用總流量除以月數作為估算)
+            if (months.length > 0) {
+                currentMonthTotal = Object.values(currentMonthCompanyStats).reduce((sum, val) => sum + val, 0);
+                // 如果當月流量為0,可能是數據結構問題,使用平均值估算
+                if (currentMonthTotal === 0) {
+                    currentMonthTotal = Math.round(totalForms / months.length);
+                }
+            } else {
+                currentMonthTotal = totalForms;
+            }
+
+            const sortedCompanies = Object.entries(companyStats).sort((a, b) => b[1] - a[1]);
+            const topCompany = sortedCompanies[0];
+            const avgPerCompany = Math.round(totalForms / companies.length);
+
+            const categoryStats = {};
+            data.forEach(item => {
+                if (!categoryStats[item.category]) {
+                    categoryStats[item.category] = {
+                        total: 0,
+                        byCompany: Array(companies.length).fill(0)
+                    };
+                }
+                categoryStats[item.category].total += item.total;
+                item.company_data.forEach((val, idx) => {
+                    categoryStats[item.category].byCompany[idx] += val;
+                });
+            });
+
+            const topForms = [...data].sort((a, b) => b.total - a.total).slice(0, 10);
+
+            return {
+                totalForms,
+                currentMonthTotal,
+                companyCount: companies.length,
+                topCompany,
+                avgPerCompany,
+                companyStats,
+                currentMonthCompanyStats,
+                categoryStats,
+                topForms,
+                companies,
+                data,
+                months
+            };
+        }
+
+        function updateCompanyKeyMetrics(stats) {
+            document.getElementById('companyCount').textContent = stats.companyCount;
+            document.getElementById('companyTotalForms').textContent = stats.totalForms.toLocaleString();
+            document.getElementById('topCompany').textContent = stats.topCompany[0];
+            document.getElementById('avgPerCompany').textContent = stats.avgPerCompany.toLocaleString();
+        }
+
+        function generateCompanyInsights(stats) {
+            const insights = [];
+
+            insights.push(`共有 <strong>${stats.companyCount}</strong> 家公司使用表單系統,13個月總流量為 <strong>${stats.totalForms.toLocaleString()}</strong> 筆`);
+
+            const sortedCompanies = Object.entries(stats.companyStats).sort((a, b) => b[1] - a[1]);
+            insights.push(`13個月期間流量最大的公司為 <strong>${sortedCompanies[0][0]}</strong>,共 <strong>${sortedCompanies[0][1].toLocaleString()}</strong> 筆 (佔 ${((sortedCompanies[0][1] / stats.totalForms) * 100).toFixed(1)}%)`);
+            insights.push(`前三大公司為: <strong>${sortedCompanies[0][0]}</strong> (${sortedCompanies[0][1].toLocaleString()}筆)、<strong>${sortedCompanies[1][0]}</strong> (${sortedCompanies[1][1].toLocaleString()}筆)、<strong>${sortedCompanies[2][0]}</strong> (${sortedCompanies[2][1].toLocaleString()}筆)`);
+
+            const categories = Object.entries(stats.categoryStats).sort((a, b) => b[1].total - a[1].total);
+            insights.push(`所有公司中,最常使用的類別為 <strong>${categories[0][0]}</strong> (${categories[0][1].total.toLocaleString()}筆)`);
+
+            insights.push(`平均每家公司流量為 <strong>${stats.avgPerCompany.toLocaleString()}</strong> 筆 (13個月平均)`);
+
+            document.getElementById('companyInsights').innerHTML = insights.map(insight => `<li>${insight}</li>`).join('');
+        }
+
+        function createCompanyPieChart(stats) {
+            const ctx = document.getElementById('companyPieChart').getContext('2d');
+
+            const sortedCompanies = Object.entries(stats.companyStats).sort((a, b) => b[1] - a[1]);
+
+            const colors = [
+                'rgb(102, 126, 234)',
+                'rgb(118, 75, 162)',
+                'rgb(237, 100, 166)',
+                'rgb(255, 154, 158)',
+                'rgb(250, 208, 196)',
+                'rgb(189, 224, 254)',
+                'rgb(162, 210, 255)',
+                'rgb(255, 200, 124)',
+                'rgb(255, 175, 163)',
+                'rgb(206, 147, 216)'
+            ];
+
+            companyCharts.companyPie = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: sortedCompanies.map(c => c[0]),
+                    datasets: [{
+                        data: sortedCompanies.map(c => c[1]),
+                        backgroundColor: colors,
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${label}: ${value.toLocaleString()} 筆 (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createCompanyBarChart(stats) {
+            const ctx = document.getElementById('companyBarChart').getContext('2d');
+
+            const sortedCompanies = Object.entries(stats.companyStats).sort((a, b) => b[1] - a[1]);
+
+            companyCharts.companyBar = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: sortedCompanies.map(c => c[0]),
+                    datasets: [{
+                        label: '流量 (筆)',
+                        data: sortedCompanies.map(c => c[1]),
+                        backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                        borderColor: 'rgb(102, 126, 234)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return '流量: ' + context.parsed.x.toLocaleString() + ' 筆';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function (value) {
+                                    return value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createCompanyCategoryChart(stats) {
+            const ctx = document.getElementById('companyCategoryChart').getContext('2d');
+
+            const categories = Object.entries(stats.categoryStats).sort((a, b) => b[1].total - a[1].total);
+
+            const colors = [
+                'rgb(102, 126, 234)',
+                'rgb(118, 75, 162)',
+                'rgb(237, 100, 166)',
+                'rgb(255, 154, 158)',
+                'rgb(250, 208, 196)',
+                'rgb(189, 224, 254)',
+                'rgb(162, 210, 255)'
+            ];
+
+            const datasets = categories.map((cat, idx) => ({
+                label: cat[0],
+                data: cat[1].byCompany,
+                backgroundColor: colors[idx % colors.length],
+                borderColor: colors[idx % colors.length],
+                borderWidth: 1
+            }));
+
+            companyCharts.companyCategory = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: stats.companies,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return context.dataset.label + ': ' + context.parsed.y.toLocaleString() + ' 筆';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            stacked: true
+                        },
+                        y: {
+                            stacked: true,
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function (value) {
+                                    return value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createCompanyTopFormsChart(stats) {
+            const ctx = document.getElementById('companyTopFormsChart').getContext('2d');
+
+            companyCharts.topForms = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: stats.topForms.map(f => f.name),
+                    datasets: [{
+                        label: '總流量 (筆)',
+                        data: stats.topForms.map(f => f.total),
+                        backgroundColor: 'rgba(118, 75, 162, 0.8)',
+                        borderColor: 'rgb(118, 75, 162)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return '總流量: ' + context.parsed.y.toLocaleString() + ' 筆';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function (value) {
+                                    return value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createCompanyDetailTable(stats) {
+            const header = document.getElementById('companyTableHeader');
+            const companyHeaders = stats.companies.map(c => `<th>${c}</th>`).join('');
+            header.innerHTML = `
+                <th>排名</th>
+                <th>類別</th>
+                <th>表單名稱</th>
+                ${companyHeaders}
+                <th>總計</th>
+            `;
+
+            const tbody = document.getElementById('companyDetailTableBody');
+            const sortedData = [...stats.data].sort((a, b) => b.total - a.total);
+
+            const rows = sortedData.map((item, idx) => {
+                const companyCells = item.company_data.map(val => {
+                    const value = Number.isFinite(val) ? val : 0;
+                    return `<td>${value > 0 ? value.toLocaleString() : '-'}</td>`;
+                }).join('');
+
+                return `
+                    <tr>
+                        <td><span class="badge">${idx + 1}</span></td>
+                        <td>${item.category}</td>
+                        <td>${item.name}</td>
+                        ${companyCells}
+                        <td><strong>${(Number.isFinite(item.total) ? item.total : 0).toLocaleString()}</strong></td>
+                    </tr>
+                `;
+            }).join('');
+
+            tbody.innerHTML = rows;
+        }
+
+        function initCompanyTab() {
+            const stats = calculateCompanyStats();
+
+            updateCompanyKeyMetrics(stats);
+            generateCompanyInsights(stats);
+            createCompanyPieChart(stats);
+            createCompanyBarChart(stats);
+            createCompanyCategoryChart(stats);
+            createCompanyTopFormsChart(stats);
+            createCompanyDetailTable(stats);
+        }
+
+        // ============== 簽核次數統計功能 ==============
+        function calculateSignatureStats() {
+            const months = signatureData.months;
+            const managers = signatureData.managers;
+
+            const totalSigns = managers.reduce((sum, mgr) => sum + mgr.total, 0);
+            const lastMonthIdx = months.length - 1;
+            const lastMonthSignTotal = managers.reduce((sum, mgr) => sum + mgr.monthly_data[lastMonthIdx], 0);
+            const avgSignMonthly = Math.round(totalSigns / months.length);
+            const managerCount = managers.length;
+
+            // 計算每月總簽核次數
+            const monthlyTotals = Array(months.length).fill(0);
+            managers.forEach(mgr => {
+                mgr.monthly_data.forEach((val, idx) => {
+                    monthlyTotals[idx] += val;
+                });
+            });
+
+            const sortedManagers = [...managers].sort((a, b) => b.total - a.total);
+
+            // 找出上月簽核超過300次的主管
+            const over300 = managers.filter(m => m.monthly_data[lastMonthIdx] > 300);
+
+            return {
+                totalSigns,
+                lastMonthSignTotal,
+                avgSignMonthly,
+                managerCount,
+                sortedManagers,
+                monthlyTotals,
+                over300,
+                months,
+                managers
+            };
+        }
+
+        function updateSignatureKeyMetrics(stats) {
+            document.getElementById('lastMonthSignTotal').textContent = stats.lastMonthSignTotal.toLocaleString();
+            document.getElementById('totalSigns').textContent = stats.totalSigns.toLocaleString();
+            document.getElementById('managerCount').textContent = stats.managerCount;
+            document.getElementById('avgSignMonthly').textContent = stats.avgSignMonthly.toLocaleString();
+        }
+
+        function generateSignatureInsights(stats) {
+            const insights = [];
+
+            insights.push(`上月(2025年11月)總簽核次數為 <strong>${stats.lastMonthSignTotal.toLocaleString()}</strong> 次`);
+
+            insights.push(`13個月期間,共有 <strong>${stats.managerCount}</strong> 位主管進行簽核,總簽核次數為 <strong>${stats.totalSigns.toLocaleString()}</strong> 次`);
+
+            insights.push(`簽核次數最多的主管為 <strong>${stats.sortedManagers[0].name}</strong>,共簽核 <strong>${stats.sortedManagers[0].total.toLocaleString()}</strong> 次`);
+
+            const avgPerManager = Math.round(stats.totalSigns / stats.managerCount);
+            insights.push(`平均每位主管簽核 <strong>${avgPerManager.toLocaleString()}</strong> 次,月平均 <strong>${Math.round(avgPerManager / stats.months.length).toLocaleString()}</strong> 次`);
+
+            if (stats.over300.length > 0) {
+                const names = stats.over300.map(m => `<strong>${m.name}</strong> (${m.monthly_data[stats.months.length - 1]}次)`).join('、');
+                insights.push(`上月單月簽核次數超過300次的主管為: ${names}`);
+            } else {
+                insights.push(`上月單月簽核次數超過300次的主管為: <strong>無</strong>`);
+            }
+
+            const maxMonth = Math.max(...stats.monthlyTotals);
+            const minMonth = Math.min(...stats.monthlyTotals);
+            const maxMonthIdx = stats.monthlyTotals.indexOf(maxMonth);
+            const minMonthIdx = stats.monthlyTotals.indexOf(minMonth);
+            insights.push(`簽核最高月份為 <strong>${stats.months[maxMonthIdx]}</strong> (${maxMonth.toLocaleString()}次),最低為 <strong>${stats.months[minMonthIdx]}</strong> (${minMonth.toLocaleString()}次)`);
+
+            document.getElementById('signInsights').innerHTML = insights.map(insight => `<li>${insight}</li>`).join('');
+        }
+
+        function createManagerRankChart(stats) {
+            const ctx = document.getElementById('managerRankChart').getContext('2d');
+
+            signatureCharts.managerRank = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: stats.sortedManagers.map(m => m.name),
+                    datasets: [{
+                        label: '總簽核次數',
+                        data: stats.sortedManagers.map(m => m.total),
+                        backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                        borderColor: 'rgb(102, 126, 234)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return '簽核次數: ' + context.parsed.x.toLocaleString() + ' 次';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function (value) {
+                                    return value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createSignPieChart(stats) {
+            const ctx = document.getElementById('signPieChart').getContext('2d');
+
+            const colors = [
+                'rgb(102, 126, 234)',
+                'rgb(118, 75, 162)',
+                'rgb(237, 100, 166)',
+                'rgb(255, 154, 158)',
+                'rgb(250, 208, 196)',
+                'rgb(189, 224, 254)'
+            ];
+
+            signatureCharts.signPie = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: stats.sortedManagers.map(m => m.name),
+                    datasets: [{
+                        data: stats.sortedManagers.map(m => m.total),
+                        backgroundColor: colors,
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${label}: ${value.toLocaleString()} 次 (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createSignTrendChart(stats) {
+            const ctx = document.getElementById('signTrendChart').getContext('2d');
+
+            const labels = stats.months.map(m => {
+                const year = m.substring(0, 4);
+                const month = m.substring(4, 6);
+                return `${year}/${month}`;
+            });
+
+            signatureCharts.signTrend = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '每月簽核次數',
+                        data: stats.monthlyTotals,
+                        borderColor: 'rgb(118, 75, 162)',
+                        backgroundColor: 'rgba(118, 75, 162, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 5,
+                        pointHoverRadius: 7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return '簽核次數: ' + context.parsed.y.toLocaleString() + ' 次';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function (value) {
+                                    return value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createManagerTrendChart(stats) {
+            const ctx = document.getElementById('managerTrendChart').getContext('2d');
+
+            const colors = [
+                'rgb(102, 126, 234)',
+                'rgb(118, 75, 162)',
+                'rgb(237, 100, 166)',
+                'rgb(255, 154, 158)',
+                'rgb(250, 208, 196)',
+                'rgb(189, 224, 254)'
+            ];
+
+            const labels = stats.months.map(m => {
+                const year = m.substring(0, 4);
+                const month = m.substring(4, 6);
+                return `${year}/${month}`;
+            });
+
+            const datasets = stats.sortedManagers.map((mgr, idx) => {
+                const color = colors[idx % colors.length];
+                return {
+                    label: mgr.name,
+                    data: mgr.monthly_data,
+                    borderColor: color,
+                    backgroundColor: color.replace('rgb', 'rgba').replace(')', ', 0.1)'),
+                    tension: 0.4,
+                    fill: false
+                };
+            });
+
+            signatureCharts.managerTrend = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return context.dataset.label + ': ' + context.parsed.y.toLocaleString() + ' 次';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function (value) {
+                                    return value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createSignatureDetailTable(stats) {
+            // 更新表頭
+            const header = document.getElementById('signTableHeader');
+            const monthHeaders = stats.months.map(m => {
+                const year = m.substring(0, 4);
+                const month = m.substring(4, 6);
+                return `<th>${year}/${month}</th>`;
+            }).join('');
+            header.innerHTML = `
+                <th>排名</th>
+                <th>主管姓名</th>
+                ${monthHeaders}
+                <th>總計</th>
+                <th>月平均</th>
+            `;
+
+            // 更新表格內容
+            const tbody = document.getElementById('signDetailTableBody');
+
+            const rows = stats.sortedManagers.map((mgr, idx) => {
+                const monthCells = mgr.monthly_data.map(val =>
+                    `<td>${val > 0 ? val.toLocaleString() : '-'}</td>`
+                ).join('');
+
+                const avg = Math.round(mgr.total / stats.months.length);
+
+                return `
+                    <tr>
+                        <td><span class="badge">${idx + 1}</span></td>
+                        <td><strong>${mgr.name}</strong></td>
+                        ${monthCells}
+                        <td><strong>${mgr.total.toLocaleString()}</strong></td>
+                        <td>${avg.toLocaleString()}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            tbody.innerHTML = rows;
+        }
+
+        function initSignatureTab() {
+            const stats = calculateSignatureStats();
+
+            updateSignatureKeyMetrics(stats);
+            generateSignatureInsights(stats);
+            createManagerRankChart(stats);
+            createSignPieChart(stats);
+            createSignTrendChart(stats);
+            createManagerTrendChart(stats);
+            createSignatureDetailTable(stats);
+        }
+
+
+
+        // ============== 申請人被駁回統計功能 ==============
+        function calculateRejectStats() {
+            const months = rejectData.months;
+            const applicants = rejectData.applicants;
+            const totalRejects = applicants.reduce((sum, app) => sum + app.total, 0);
+            const lastMonthIdx = months.length - 1;
+            const lastMonthRejectTotal = applicants.reduce((sum, app) => sum + app.monthly_data[lastMonthIdx], 0);
+            const applicantCount = applicants.length;
+            const monthlyTotals = Array(months.length).fill(0);
+            applicants.forEach(app => {
+                app.monthly_data.forEach((val, idx) => {
+                    monthlyTotals[idx] += val;
+                });
+            });
+            const sortedApplicants = [...applicants].sort((a, b) => b.total - a.total);
+            const over3 = applicants.filter(a => a.total > 3);
+            const companyStats = {};
+            applicants.forEach(app => {
+                if (!companyStats[app.company]) companyStats[app.company] = 0;
+                companyStats[app.company] += app.total;
+            });
+            return { totalRejects, lastMonthRejectTotal, applicantCount, over3Count: over3.length, sortedApplicants, monthlyTotals, over3, companyStats, months, applicants };
+        }
+
+        function updateRejectKeyMetrics(stats) {
+            document.getElementById('lastMonthRejectTotal').textContent = stats.lastMonthRejectTotal.toLocaleString();
+            document.getElementById('totalRejects').textContent = stats.totalRejects.toLocaleString();
+            document.getElementById('applicantCount').textContent = stats.applicantCount;
+            document.getElementById('over3Count').textContent = stats.over3Count;
+        }
+
+        function generateRejectInsights(stats) {
+            const insights = [];
+            insights.push(`上月(2025年11月)被駁回次數為 <strong>${stats.lastMonthRejectTotal.toLocaleString()}</strong> 次`);
+            insights.push(`13個月期間,共有 <strong>${stats.applicantCount}</strong> 位申請人曾被駁回,總駁回次數為 <strong>${stats.totalRejects.toLocaleString()}</strong> 次`);
+            insights.push(`被駁回次數最多的申請人為 <strong>${stats.sortedApplicants[0].name}</strong> (${stats.sortedApplicants[0].company}),共被駁回 <strong>${stats.sortedApplicants[0].total}</strong> 次`);
+            insights.push(`被駁回超過3次的申請人共有 <strong>${stats.over3Count}</strong> 位`);
+            const sortedCompanies = Object.entries(stats.companyStats).sort((a, b) => b[1] - a[1]);
+            insights.push(`被駁回最多的公司為 <strong>${sortedCompanies[0][0]}</strong>,共 <strong>${sortedCompanies[0][1]}</strong> 次`);
+            document.getElementById('rejectInsights').innerHTML = insights.map(insight => `<li>${insight}</li>`).join('');
+        }
+
+        function createApplicantRankChart(stats) {
+            const ctx = document.getElementById('applicantRankChart').getContext('2d');
+            const top15 = stats.sortedApplicants.slice(0, 15);
+            rejectCharts.applicantRank = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: top15.map(a => a.name),
+                    datasets: [{ label: '被駁回次數', data: top15.map(a => a.total), backgroundColor: 'rgba(220, 53, 69, 0.8)', borderColor: 'rgb(220, 53, 69)', borderWidth: 1 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } }
+            });
+        }
+
+        function createCompanyRejectChart(stats) {
+            const ctx = document.getElementById('companyRejectChart').getContext('2d');
+            const sortedCompanies = Object.entries(stats.companyStats).sort((a, b) => b[1] - a[1]);
+            rejectCharts.companyReject = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: sortedCompanies.map(c => c[0]),
+                    datasets: [{ label: '被駁回次數', data: sortedCompanies.map(c => c[1]), backgroundColor: 'rgba(255, 154, 158, 0.8)', borderColor: 'rgb(255, 154, 158)', borderWidth: 1 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } }
+            });
+        }
+
+        function createRejectTrendChart(stats) {
+            const ctx = document.getElementById('rejectTrendChart').getContext('2d');
+            const labels = stats.months.map(m => `${m.substring(0, 4)}/${m.substring(4, 6)}`);
+            rejectCharts.rejectTrend = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{ label: '每月被駁回次數', data: stats.monthlyTotals, borderColor: 'rgb(220, 53, 69)', backgroundColor: 'rgba(220, 53, 69, 0.1)', tension: 0.4, fill: true, pointRadius: 5, pointHoverRadius: 7 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'top' } }, scales: { y: { beginAtZero: true } } }
+            });
+        }
+
+        function createOver3Chart(stats) {
+            const ctx = document.getElementById('over3Chart').getContext('2d');
+            const over3Sorted = [...stats.over3].sort((a, b) => b.total - a.total);
+            rejectCharts.over3 = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: over3Sorted.map(a => a.name + ' (' + a.company + ')'),
+                    datasets: [{ label: '被駁回次數', data: over3Sorted.map(a => a.total), backgroundColor: over3Sorted.map(a => a.total > 5 ? 'rgba(220, 53, 69, 0.9)' : 'rgba(255, 154, 158, 0.8)'), borderColor: 'rgb(220, 53, 69)', borderWidth: 1 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+            });
+        }
+
+        function createRejectDetailTable(stats) {
+            const header = document.getElementById('rejectTableHeader');
+            const monthHeaders = stats.months.map(m => `<th>${m.substring(0, 4)}/${m.substring(4, 6)}</th>`).join('');
+            header.innerHTML = `<th>排名</th><th>公司</th><th>申請人姓名</th>${monthHeaders}<th>總計</th>`;
+            const tbody = document.getElementById('rejectDetailTableBody');
+            const rows = stats.sortedApplicants.map((app, idx) => {
+                const monthCells = app.monthly_data.map(val => {
+                    const style = val > 3 ? 'background: #fff3cd; color: #dc3545; font-weight: bold;' : '';
+                    return `<td style="${style}">${val > 0 ? val : '-'}</td>`;
+                }).join('');
+                const totalStyle = app.total > 3 ? 'background: #fff3cd; color: #dc3545; font-weight: bold;' : '';
+                return `<tr><td><span class="badge">${idx + 1}</span></td><td>${app.company}</td><td>${app.name}</td>${monthCells}<td style="${totalStyle}"><strong>${app.total}</strong></td></tr>`;
+            }).join('');
+            tbody.innerHTML = rows;
+        }
+
+        function initRejectTab() {
+            const stats = calculateRejectStats();
+            updateRejectKeyMetrics(stats);
+            generateRejectInsights(stats);
+            createApplicantRankChart(stats);
+            createCompanyRejectChart(stats);
+            createRejectTrendChart(stats);
+            createOver3Chart(stats);
+            createRejectDetailTable(stats);
+        }
+
+        // ============== 簽核主管駁回統計功能 ==============
+        function calculateManagerRejectStats() {
+            const months = managerRejectData.months;
+            const managers = managerRejectData.managers;
+            const totalRejects = managers.reduce((sum, mgr) => sum + mgr.total, 0);
+            const lastMonthIdx = months.length - 1;
+            const lastMonthRejectTotal = managers.reduce((sum, mgr) => sum + mgr.monthly_data[lastMonthIdx], 0);
+            const managerCount = managers.length;
+            const monthlyTotals = Array(months.length).fill(0);
+            managers.forEach(mgr => {
+                mgr.monthly_data.forEach((val, idx) => {
+                    monthlyTotals[idx] += val;
+                });
+            });
+            const sortedManagers = [...managers].sort((a, b) => b.total - a.total);
+            const over3 = managers.filter(m => m.total > 3);
+            const companyStats = {};
+            managers.forEach(mgr => {
+                if (!companyStats[mgr.company]) companyStats[mgr.company] = 0;
+                companyStats[mgr.company] += mgr.total;
+            });
+            return { totalRejects, lastMonthRejectTotal, managerCount, over3Count: over3.length, sortedManagers, monthlyTotals, over3, companyStats, months, managers };
+        }
+
+        function updateManagerRejectKeyMetrics(stats) {
+            document.getElementById('lastMonthMgrRejectTotal').textContent = stats.lastMonthRejectTotal.toLocaleString();
+            document.getElementById('totalMgrRejects').textContent = stats.totalRejects.toLocaleString();
+            document.getElementById('mgrRejectCount').textContent = stats.managerCount;
+            document.getElementById('mgrOver3Count').textContent = stats.over3Count;
+        }
+
+        function generateManagerRejectInsights(stats) {
+            const insights = [];
+            insights.push(`上月(2025年11月)主管駁回次數為 <strong>${stats.lastMonthRejectTotal.toLocaleString()}</strong> 次`);
+            insights.push(`13個月期間,共有 <strong>${stats.managerCount}</strong> 位主管曾駁回申請,總駁回次數為 <strong>${stats.totalRejects.toLocaleString()}</strong> 次`);
+            insights.push(`駁回次數最多的主管為 <strong>${stats.sortedManagers[0].name}</strong> (${stats.sortedManagers[0].company}),共駁回 <strong>${stats.sortedManagers[0].total}</strong> 次`);
+            insights.push(`駁回超過3次的主管共有 <strong>${stats.over3Count}</strong> 位`);
+            const sortedCompanies = Object.entries(stats.companyStats).sort((a, b) => b[1] - a[1]);
+            insights.push(`主管駁回最多的公司為 <strong>${sortedCompanies[0][0]}</strong>,共 <strong>${sortedCompanies[0][1]}</strong> 次`);
+            document.getElementById('mgrRejectInsights').innerHTML = insights.map(insight => `<li>${insight}</li>`).join('');
+        }
+
+        function createManagerRejectRankChart(stats) {
+            const ctx = document.getElementById('mgrRejectRankChart').getContext('2d');
+            const top15 = stats.sortedManagers.slice(0, 15);
+            managerRejectCharts.mgrRejectRank = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: top15.map(m => m.name),
+                    datasets: [{ label: '駁回次數', data: top15.map(m => m.total), backgroundColor: 'rgba(255, 152, 0, 0.8)', borderColor: 'rgb(255, 152, 0)', borderWidth: 1 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } }
+            });
+        }
+
+        function createManagerCompanyRejectChart(stats) {
+            const ctx = document.getElementById('mgrCompanyRejectChart').getContext('2d');
+            const sortedCompanies = Object.entries(stats.companyStats).sort((a, b) => b[1] - a[1]);
+            managerRejectCharts.mgrCompanyReject = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: sortedCompanies.map(c => c[0]),
+                    datasets: [{ label: '駁回次數', data: sortedCompanies.map(c => c[1]), backgroundColor: 'rgba(255, 193, 7, 0.8)', borderColor: 'rgb(255, 193, 7)', borderWidth: 1 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } }
+            });
+        }
+
+        function createManagerRejectTrendChart(stats) {
+            const ctx = document.getElementById('mgrRejectTrendChart').getContext('2d');
+            const labels = stats.months.map(m => `${m.substring(0, 4)}/${m.substring(4, 6)}`);
+            managerRejectCharts.mgrRejectTrend = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{ label: '每月主管駁回次數', data: stats.monthlyTotals, borderColor: 'rgb(255, 152, 0)', backgroundColor: 'rgba(255, 152, 0, 0.1)', tension: 0.4, fill: true, pointRadius: 5, pointHoverRadius: 7 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'top' } }, scales: { y: { beginAtZero: true } } }
+            });
+        }
+
+        function createManagerOver3Chart(stats) {
+            const ctx = document.getElementById('mgrOver3Chart').getContext('2d');
+            const over3Sorted = [...stats.over3].sort((a, b) => b.total - a.total);
+            managerRejectCharts.mgrOver3 = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: over3Sorted.map(m => m.name + ' (' + m.company + ')'),
+                    datasets: [{ label: '駁回次數', data: over3Sorted.map(m => m.total), backgroundColor: over3Sorted.map(m => m.total > 10 ? 'rgba(255, 152, 0, 0.9)' : 'rgba(255, 193, 7, 0.8)'), borderColor: 'rgb(255, 152, 0)', borderWidth: 1 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+            });
+        }
+
+        function createManagerRejectDetailTable(stats) {
+            const header = document.getElementById('mgrRejectTableHeader');
+            const monthHeaders = stats.months.map(m => `<th>${m.substring(0, 4)}/${m.substring(4, 6)}</th>`).join('');
+            header.innerHTML = `<th>排名</th><th>公司</th><th>主管姓名</th>${monthHeaders}<th>總計</th>`;
+            const tbody = document.getElementById('mgrRejectDetailTableBody');
+            const rows = stats.sortedManagers.map((mgr, idx) => {
+                const monthCells = mgr.monthly_data.map(val => {
+                    const style = val > 3 ? 'background: #fff3cd; color: #ff9800; font-weight: bold;' : '';
+                    return `<td style="${style}">${val > 0 ? val : '-'}</td>`;
+                }).join('');
+                const totalStyle = mgr.total > 3 ? 'background: #fff3cd; color: #ff9800; font-weight: bold;' : '';
+                return `<tr><td><span class="badge">${idx + 1}</span></td><td>${mgr.company}</td><td>${mgr.name}</td>${monthCells}<td style="${totalStyle}"><strong>${mgr.total}</strong></td></tr>`;
+            }).join('');
+            tbody.innerHTML = rows;
+        }
+
+        function initManagerRejectTab() {
+            const stats = calculateManagerRejectStats();
+            updateManagerRejectKeyMetrics(stats);
+            generateManagerRejectInsights(stats);
+            createManagerRejectRankChart(stats);
+            createManagerCompanyRejectChart(stats);
+            createManagerRejectTrendChart(stats);
+            createManagerOver3Chart(stats);
+            createManagerRejectDetailTable(stats);
+        }
+
+
+
+        // ============== 簽核時間統計功能 ==============
+        function calculateApprovalTimeStats() {
+            const over10Forms = Array.isArray(approvalTimeData?.over_10_forms) ? approvalTimeData.over_10_forms : [];
+            const approvalRecords = Array.isArray(approvalTimeData?.approval_records) ? approvalTimeData.approval_records : [];
+            const formStats = approvalTimeData?.form_stats && typeof approvalTimeData.form_stats === 'object' ? approvalTimeData.form_stats : {};
+            const managerStats = approvalTimeData?.manager_stats && typeof approvalTimeData.manager_stats === 'object' ? approvalTimeData.manager_stats : {};
+            const companyStats = approvalTimeData?.company_stats && typeof approvalTimeData.company_stats === 'object' ? approvalTimeData.company_stats : {};
+
+            const totalRecords = approvalRecords.length;
+            const totalFormsCount = Object.keys(formStats).length;
+            const over10Count = over10Forms.length;
+            const over3DaysCount = approvalRecords.filter(r => r.total_mins > 3 * 24 * 60).length;
+
+            // 排序主管按平均時間
+            const sortedManagers = Object.entries(managerStats)
+                .sort((a, b) => b[1].avg_mins - a[1].avg_mins)
+                .filter(m => m[0] !== '簽核主管' && m[1].count > 0);
+
+            // 排序公司按平均時間
+            const sortedCompanies = Object.entries(companyStats)
+                .sort((a, b) => b[1].avg_mins - a[1].avg_mins)
+                .filter(c => c[0] !== '(Blank)' && c[0] !== '公司');
+
+            // 排序表單按總時間
+            const sortedForms = Object.entries(formStats)
+                .sort((a, b) => b[1].total_time_mins - a[1].total_time_mins);
+
+            return {
+                totalRecords,
+                totalFormsCount,
+                over10Count,
+                over3DaysCount,
+                over10Forms,
+                sortedManagers,
+                sortedCompanies,
+                sortedForms,
+                approvalRecords
+            };
+        }
+
+        function updateApprovalTimeKeyMetrics(stats) {
+            document.getElementById('totalApprovalRecords').textContent = stats.totalRecords.toLocaleString();
+            document.getElementById('totalApprovalForms').textContent = stats.totalFormsCount;
+            document.getElementById('over10FormsCount').textContent = stats.over10Count;
+            document.getElementById('over3DaysCount').textContent = stats.over3DaysCount;
+        }
+
+        function generateApprovalTimeInsights(stats) {
+            const insights = [];
+
+            insights.push(`共有 <strong>${stats.totalFormsCount}</strong> 筆表單,<strong>${stats.totalRecords}</strong> 筆簽核記錄`);
+
+            if (stats.over10Forms.length > 0) {
+                insights.push(`流程超過10關的表單有 <strong>${stats.over10Count}</strong> 筆,最多達 <strong>${Math.max(...stats.over10Forms.map(f => f.steps))}</strong> 關`);
+            } else {
+                insights.push(`流程超過10關的表單有 <strong>0</strong> 筆,最多達 <strong>0</strong> 關`);
+            }
+
+            insights.push(`簽核時間超過3天的記錄有 <strong>${stats.over3DaysCount}</strong> 筆`);
+
+            if (stats.sortedManagers.length > 0) {
+                const slowest = stats.sortedManagers[0];
+                insights.push(`平均簽核最慢的主管為 <strong>${slowest[0]}</strong>,平均 <strong>${(slowest[1].avg_hours).toFixed(1)}</strong> 小時`);
+            }
+
+            if (stats.sortedCompanies.length > 0) {
+                const slowestCompany = stats.sortedCompanies[0];
+                insights.push(`平均簽核時間最長的公司為 <strong>${slowestCompany[0]}</strong>,平均 <strong>${(slowestCompany[1].avg_hours).toFixed(1)}</strong> 小時`);
+            }
+
+            document.getElementById('approvalTimeInsights').innerHTML = insights.map(insight => `<li>${insight}</li>`).join('');
+        }
+
+        function createManagerTimeChart(stats) {
+            const ctx = document.getElementById('managerTimeChart').getContext('2d');
+            const top15 = stats.sortedManagers.slice(0, 15);
+
+            approvalTimeCharts.managerTime = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: top15.map(m => m[0]),
+                    datasets: [{
+                        label: '平均簽核時間 (小時)',
+                        data: top15.map(m => m[1].avg_hours),
+                        backgroundColor: 'rgba(156, 39, 176, 0.8)',
+                        borderColor: 'rgb(156, 39, 176)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return '平均: ' + context.parsed.x.toFixed(1) + ' 小時';
+                                }
+                            }
+                        }
+                    },
+                    scales: { x: { beginAtZero: true } }
+                }
+            });
+        }
+
+        function createCompanyTimeChart(stats) {
+            const ctx = document.getElementById('companyTimeChart').getContext('2d');
+
+            approvalTimeCharts.companyTime = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: stats.sortedCompanies.map(c => c[0]),
+                    datasets: [{
+                        label: '平均簽核時間 (小時)',
+                        data: stats.sortedCompanies.map(c => c[1].avg_hours),
+                        backgroundColor: 'rgba(103, 58, 183, 0.8)',
+                        borderColor: 'rgb(103, 58, 183)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: { x: { beginAtZero: true } }
+                }
+            });
+        }
+
+        function createTimeDistributionChart(stats) {
+            const ctx = document.getElementById('timeDistributionChart').getContext('2d');
+
+            // 時間區間統計
+            const ranges = {
+                '< 1小時': 0,
+                '1-6小時': 0,
+                '6-24小時': 0,
+                '1-3天': 0,
+                '> 3天': 0
+            };
+
+            stats.approvalRecords.forEach(r => {
+                const hours = r.total_mins / 60;
+                if (hours < 1) ranges['< 1小時']++;
+                else if (hours < 6) ranges['1-6小時']++;
+                else if (hours < 24) ranges['6-24小時']++;
+                else if (hours < 72) ranges['1-3天']++;
+                else ranges['> 3天']++;
+            });
+
+            approvalTimeCharts.timeDistribution = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(ranges),
+                    datasets: [{
+                        label: '簽核記錄數',
+                        data: Object.values(ranges),
+                        backgroundColor: [
+                            'rgba(76, 175, 80, 0.8)',
+                            'rgba(139, 195, 74, 0.8)',
+                            'rgba(255, 193, 7, 0.8)',
+                            'rgba(255, 152, 0, 0.8)',
+                            'rgba(244, 67, 54, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgb(76, 175, 80)',
+                            'rgb(139, 195, 74)',
+                            'rgb(255, 193, 7)',
+                            'rgb(255, 152, 0)',
+                            'rgb(244, 67, 54)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+
+        function createOver3DaysChart(stats) {
+            const ctx = document.getElementById('over3DaysChart').getContext('2d');
+            const over3Days = stats.approvalRecords
+                .filter(r => r.total_mins > 3 * 24 * 60)
+                .sort((a, b) => b.total_mins - a.total_mins)
+                .slice(0, 20);
+
+            approvalTimeCharts.over3Days = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: over3Days.map(r => r.manager + ' (' + r.form_no + ')'),
+                    datasets: [{
+                        label: '簽核時間 (天)',
+                        data: over3Days.map(r => r.total_mins / (24 * 60)),
+                        backgroundColor: over3Days.map(r =>
+                            r.total_mins > 7 * 24 * 60 ? 'rgba(244, 67, 54, 0.9)' : 'rgba(255, 152, 0, 0.8)'
+                        ),
+                        borderColor: 'rgb(244, 67, 54)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+
+        function createOver10FormsTable(stats) {
+            const tbody = document.getElementById('over10FormsTableBody');
+            const rows = stats.over10Forms.map(form => {
+                const stepStyle = form.steps > 12 ? 'background: #fff3cd; color: #d32f2f; font-weight: bold;' : '';
+                return `
+                    <tr>
+                        <td>${form.form_no}</td>
+                        <td>${form.subject}</td>
+                        <td>${form.dept}</td>
+                        <td>${form.applicant}</td>
+                        <td style="${stepStyle}"><strong>${form.steps}</strong></td>
+                    </tr>
+                `;
+            }).join('');
+            tbody.innerHTML = rows || '<tr><td colspan="5">無</td></tr>';
+        }
+
+        function createFormTimeTable(stats) {
+            const tbody = document.getElementById('formTimeTableBody');
+            const rows = stats.sortedForms.map((form, idx) => {
+                const [formNo, data] = form;
+                const totalHours = data.total_time_mins / 60;
+                const avgHours = data.avg_time_mins / 60;
+                const maxHours = data.max_step_time / 60;
+
+                return `
+                    <tr>
+                        <td><span class="badge">${idx + 1}</span></td>
+                        <td>${formNo}</td>
+                        <td>${data.subject.substring(0, 40)}${data.subject.length > 40 ? '...' : ''}</td>
+                        <td>${data.total_steps}</td>
+                        <td>${totalHours.toFixed(1)} 小時</td>
+                        <td>${avgHours.toFixed(1)} 小時</td>
+                        <td>${maxHours.toFixed(1)} 小時</td>
+                    </tr>
+                `;
+            }).join('');
+            tbody.innerHTML = rows;
+        }
+
+        function initApprovalTimeTab() {
+            const stats = calculateApprovalTimeStats();
+
+            updateApprovalTimeKeyMetrics(stats);
+            generateApprovalTimeInsights(stats);
+            createManagerTimeChart(stats);
+            createCompanyTimeChart(stats);
+            createTimeDistributionChart(stats);
+            createOver3DaysChart(stats);
+            createOver10FormsTable(stats);
+            createFormTimeTable(stats);
+        }
+
+        // 更新時間
+        function updateTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleString('zh-TW', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            document.getElementById('updateTime').textContent = timeStr;
+        }
+
+        // 初始化
+        function init() {
+            // 只初始化月度統計（預設顯示的分頁）
+            initMonthlyTab();
+            updateTime();
+        }
+
+    </script>
+
+</body>
+
+</html>
