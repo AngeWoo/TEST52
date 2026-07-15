@@ -480,6 +480,14 @@
         <div class="logo-section">
             <h1>📊 炎洲集團華苓BPM統計分析</h1>
             <div class="subtitle">智能數據分析 · 一鍵生成報表</div>
+            <a id="viewHistoryLink" href="results.html" onclick="return openLatestHistory()" style="display: none;
+                margin-top: 18px; padding: 12px 28px; background: rgba(255,255,255,0.15); color: white;
+                border: 2px solid rgba(255,255,255,0.6); border-radius: 30px; font-weight: 600; font-size: 1.05em;
+                text-decoration: none; backdrop-filter: blur(10px); transition: all 0.3s ease;"
+                onmouseover="this.style.background='rgba(255,255,255,0.3)'"
+                onmouseout="this.style.background='rgba(255,255,255,0.15)'">
+                📈 直接查看歷史報表
+            </a>
         </div>
 
         <div class="upload-card">
@@ -1113,10 +1121,17 @@
         function renderHistoryList() {
             const card = document.getElementById('historyCard');
             const list = document.getElementById('historyList');
+            const link = document.getElementById('viewHistoryLink');
             const index = bpmGetHistoryIndex();
             if (!index.length) {
                 card.style.display = 'none';
+                if (link) link.style.display = 'none';
                 return;
+            }
+            // 頂部連結: 直接開啟最新月份的歷史報表
+            if (link) {
+                link.style.display = 'inline-block';
+                link.textContent = `📈 直接查看歷史報表 (最新: ${bpmFormatMonth(index[0].month)})`;
             }
             card.style.display = 'block';
             list.innerHTML = index.map(e => {
@@ -1130,6 +1145,13 @@
                     </div>
                 `;
             }).join('');
+        }
+
+        // 頂部連結: 清除舊的 session 資料,讓 results.html 自動載入最新月份
+        function openLatestHistory() {
+            sessionStorage.removeItem('bpmAnalysisData');
+            sessionStorage.removeItem('uploadedFileName');
+            return true; // 繼續執行 <a> 的預設跳轉
         }
 
         function openHistory(month) {
