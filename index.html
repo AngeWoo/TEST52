@@ -380,6 +380,77 @@
             font-weight: 500;
         }
 
+        .history-card {
+            background: var(--card-bg);
+            margin-top: 24px;
+            padding: 28px 32px;
+            border-radius: 20px;
+            box-shadow: var(--shadow-lg);
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .history-card h3 {
+            color: var(--text-primary);
+            font-size: 1.25em;
+            margin-bottom: 14px;
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .history-month {
+            font-weight: 700;
+            color: var(--primary-blue);
+            min-width: 105px;
+        }
+
+        .history-meta {
+            flex: 1;
+            color: var(--text-secondary);
+            font-size: 0.88em;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .history-item button {
+            border: none;
+            border-radius: 8px;
+            padding: 8px 14px;
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .history-open {
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-light));
+            color: white;
+        }
+
+        .history-open:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .history-delete {
+            background: #fdecea;
+            color: #c62828;
+        }
+
+        .history-delete:hover {
+            background: #f9d0cc;
+        }
+
         @media (max-width: 768px) {
             body {
                 padding: 15px;
@@ -443,6 +514,11 @@
             <div class="error-message" id="errorMessage"></div>
         </div>
 
+        <div class="history-card" id="historyCard" style="display: none;">
+            <h3>📚 歷史分析報表</h3>
+            <div id="historyList"></div>
+        </div>
+
         <div class="features">
             <div class="feature-item">
                 <div class="feature-icon">⚡</div>
@@ -459,6 +535,7 @@
         </div>
     </div>
 
+    <script src="bpm-history.js"></script>
     <script>
         let selectedFile = null;
 
@@ -627,14 +704,20 @@
                         validationWarnings.forEach(w => console.warn('⚠️', w));
                     }
 
-                    console.log('✨ 5秒後跳轉到結果頁面...');
-                    console.log('✨ 請截圖保存上方所有日誌!');
+                    // 保存本月分析資料至歷史 (localStorage,以報表月份為鍵)
+                    const saveResult = bpmSaveHistory(allData, selectedFile.name);
+                    if (saveResult.ok) {
+                        console.log(`💾 已保存 ${bpmFormatMonth(saveResult.month)} 分析資料至歷史` + (saveResult.trimmed ? ' (已清理最舊月份)' : ''));
+                    } else {
+                        console.warn('💾 歷史資料保存失敗:', saveResult.reason);
+                    }
+
+                    console.log('✨ 即將跳轉到結果頁面...');
                     console.log('✨ ========================================');
 
-                    // 延遲5秒後跳轉,讓用戶有時間查看日誌
                     setTimeout(() => {
                         window.location.href = 'results.html';
-                    }, 5000);
+                    }, 800);
 
                 } catch (error) {
                     console.error('處理檔案時發生錯誤:', error);
@@ -664,40 +747,37 @@
             );
         }
 
-        function findMonthlyHeaderRow(json) {
+        function cellText(value) {
+            return value === null || value === undefined ? '' : String(value).trim();
+        }
+
+        function toNum(value) {
+            if (value === null || value === undefined || value === '' || value === '-') return 0;
+            const n = Number(value);
+            return Number.isFinite(n) ? n : 0;
+        }
+
+        // 找出月份標題行,並記錄每個月份所在的欄位索引 (自動適應月份起始欄不同的工作表)
+        function findMonthColumns(json) {
             const maxScan = Math.min(json.length, 20);
             for (let i = 0; i < maxScan; i++) {
                 const row = json[i];
                 if (!row) continue;
-                let count = 0;
+                const cols = [];
                 for (let j = 0; j < row.length; j++) {
-                    if (isMonthToken(row[j])) count++;
+                    const text = cellText(row[j]);
+                    if (text.includes('總計')) break;
+                    if (isMonthToken(row[j])) cols.push({ col: j, month: text.replace(/\s+/g, '') });
                 }
-                if (count >= 3) return i;
-            }
-            return 2;
-        }
-
-        function extractMonthsFromRow(row) {
-            const months = [];
-            if (!row) return months;
-            let startIdx = -1;
-            for (let i = 0; i < row.length; i++) {
-                if (isMonthToken(row[i])) {
-                    startIdx = i;
-                    break;
+                if (cols.length >= 3) {
+                    return {
+                        headerRowIdx: i,
+                        months: cols.map(c => c.month),
+                        monthCols: cols.map(c => c.col)
+                    };
                 }
             }
-            if (startIdx === -1) return months;
-            for (let i = startIdx; i < row.length; i++) {
-                const cell = row[i];
-                const text = cell === null || cell === undefined ? '' : String(cell).trim();
-                if (!text) break;
-                if (String(text).includes('總計')) break;
-                if (!isMonthToken(cell)) break;
-                months.push(String(cell));
-            }
-            return months;
+            return { headerRowIdx: 2, months: [], monthCols: [] };
         }
 
         function findCompanyHeaderRow(json) {
@@ -719,286 +799,213 @@
             return 2;
         }
 
-        function findDataStartRow(json, headerRowIdx) {
+        function processMonthlySheet(sheet) {
+            const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+            const { headerRowIdx, months, monthCols } = findMonthColumns(json);
+            console.log('📊 [月度統計] 總行數:', json.length, '| 月份:', months);
+
+            // 版面: 第0欄=流程類別(僅每組第一列有值), 第1欄=流程名稱, 月份數據依 monthCols 取值
+            const forms = [];
+            let currentCategory = '';
             for (let i = headerRowIdx + 1; i < json.length; i++) {
                 const row = json[i];
                 if (!row) continue;
-                const first = row[0];
-                const second = row[1];
-                const firstText = first === null || first === undefined ? '' : String(first).trim();
-                const secondText = second === null || second === undefined ? '' : String(second).trim();
-                if (!firstText) continue;
-                // 跳過欄位標題行 (包含"流程類別"、"流程名稱"等)
-                if (firstText.includes('流程類別') || firstText.includes('類別') ||
-                    secondText.includes('流程名稱') || secondText.includes('名稱')) continue;
-                // 跳過包含"合計"的標題行
-                if (firstText.includes('合計') || secondText.includes('合計')) continue;
-                return i;
-            }
-            return headerRowIdx + 1;
-        }
 
-        function processMonthlySheet(sheet) {
-            const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-            console.log('📊 [月度統計] 總行數:', json.length);
-            console.log('📊 [月度統計] 前5行數據:', json.slice(0, 5));
+                const firstCol = cellText(row[0]);
+                const secondCol = cellText(row[1]);
 
-            const headerRowIdx = findMonthlyHeaderRow(json);
-            console.log('📊 [月度統計] 標題行索引:', headerRowIdx);
-            console.log('📊 [月度統計] 標題行內容:', json[headerRowIdx]);
+                // 遇到"總計"整表結束
+                if (firstCol.includes('總計') || secondCol.includes('總計') || firstCol === 'Grand Total') break;
+                // 跳過類別合計行 (如"人事類 合計")
+                if (firstCol.includes('合計') || secondCol.includes('合計')) continue;
+                // 跳過欄位標題行
+                if (firstCol.includes('類別') || secondCol.includes('名稱') || secondCol.includes('開立張數')) continue;
 
-            const months = extractMonthsFromRow(json[headerRowIdx]);
-            console.log('📊 [月度統計] 解析到的月份:', months.length, '個月份:', months);
+                // 類別為合併儲存格,僅每組第一列有值,需向下填充
+                if (firstCol) currentCategory = firstCol;
+                if (!secondCol) continue;
 
-            const dataStartRow = findDataStartRow(json, headerRowIdx);
-            console.log('📊 [月度統計] 數據起始行:', dataStartRow);
-
-            const forms = [];
-            for (let i = dataStartRow; i < json.length; i++) {
-                const row = json[i];
-                if (!row || !row[0]) {
-                    console.log(`📊 [月度統計] 第 ${i} 行: 空行,跳過`);
-                    continue;
-                }
-
-                const firstCol = String(row[0]).trim();
-                const secondCol = String(row[1] || '').trim();
-
-                // 跳過類別合計行 (如"人事類 合計"、"公文類 合計"等 - 第二列為空)
-                if (firstCol.includes('合計') && !secondCol) {
-                    console.log(`📊 [月度統計] 第 ${i} 行: 類別合計行,跳過`);
-                    continue;
-                }
-
-                // 只有遇到"總計"才停止
-                if (firstCol === '總計' || firstCol === 'Grand Total') {
-                    console.log(`📊 [月度統計] 第 ${i} 行: 遇到"總計",停止解析`);
-                    console.log(`📊 [月度統計] 該行內容:`, row);
-                    break;
-                }
-
-                const monthlyData = [];
-                let total = 0;
-                const firstMonthIdx = row.findIndex(cell => isMonthToken(cell));
-                const startIdx = firstMonthIdx > -1 ? firstMonthIdx : 2;
-
-                if (i === dataStartRow || (i > dataStartRow && forms.length < 5)) {
-                    console.log(`📊 [月度統計] 第 ${i} 行數據:`, row);
-                }
-
-                for (let j = startIdx; j < startIdx + months.length; j++) {
-                    const val = row[j] === '-' || row[j] === null || row[j] === undefined || row[j] === '' ? 0 : Number(row[j]);
-                    monthlyData.push(val);
-                    total += val;
-                }
-
+                const monthlyData = monthCols.map(c => toNum(row[c]));
                 forms.push({
-                    name: String(row[0]),
-                    category: String(row[1] || ''),
+                    name: secondCol,
+                    category: currentCategory,
                     monthly_data: monthlyData,
-                    total: total
+                    total: monthlyData.reduce((a, b) => a + b, 0)
                 });
             }
 
-            console.log('📊 [月度統計] 解析完成! 共解析到', forms.length, '個表單');
-            console.log('📊 [月度統計] 前3個表單:', forms.slice(0, 3));
-            console.log('📊 [月度統計] 最後3個表單:', forms.slice(-3));
-
+            console.log('📊 [月度統計] 解析完成! 共', forms.length, '個表單');
             return { months, data: forms };
         }
 
         function processCompanySheet(sheet) {
             const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-            console.log('🏢 [公司別統計] 總行數:', json.length);
-            console.log('🏢 [公司別統計] 前5行數據:', json.slice(0, 5));
-
-            const companies = [];
 
             const headerRowIdx = findCompanyHeaderRow(json);
-            console.log('🏢 [公司別統計] 標題行索引:', headerRowIdx);
-
             const headerRow = json[headerRowIdx] || [];
-            console.log('🏢 [公司別統計] 標題行內容:', headerRow);
 
-            for (let i = 2; i < headerRow.length; i++) {
-                const cell = headerRow[i];
-                if (!cell) continue;
-                const text = String(cell).trim();
-                if (!text || text === '總計') break;
+            // 公司名稱從第2欄開始,直到"總計"為止
+            const companies = [];
+            const companyCols = [];
+            for (let j = 2; j < headerRow.length; j++) {
+                const text = cellText(headerRow[j]);
+                if (!text || text.includes('總計')) break;
                 companies.push(text);
+                companyCols.push(j);
             }
-            console.log('🏢 [公司別統計] 解析到的公司:', companies.length, '個:', companies);
+            console.log('🏢 [公司別統計] 公司:', companies.length, '個:', companies);
 
+            // 版面: 第0欄=流程類別(合併儲存格,向下填充), 第1欄=流程名稱
             const data = [];
-            const dataStartRow = findDataStartRow(json, headerRowIdx);
-            console.log('🏢 [公司別統計] 數據起始行:', dataStartRow);
-
-            for (let i = dataStartRow; i < json.length; i++) {
+            let currentCategory = '';
+            for (let i = headerRowIdx + 1; i < json.length; i++) {
                 const row = json[i];
-                if (!row || !row[0]) {
-                    console.log(`🏢 [公司別統計] 第 ${i} 行: 空行,跳過`);
-                    continue;
-                }
+                if (!row) continue;
 
-                // 只有當第一列完全是"合計"或"總計"時才停止
-                const firstCol = String(row[0]).trim();
-                const secondCol = String(row[1] || '').trim();
-                if (firstCol === '合計' || firstCol === '總計' ||
-                    firstCol === 'Grand Total' || secondCol === '合計' || secondCol === '總計') {
-                    console.log(`🏢 [公司別統計] 第 ${i} 行: 遇到"合計",停止解析`);
-                    console.log(`🏢 [公司別統計] 該行內容:`, row);
-                    break;
-                }
+                const firstCol = cellText(row[0]);
+                const secondCol = cellText(row[1]);
 
-                if (i === dataStartRow || (i > dataStartRow && data.length < 5)) {
-                    console.log(`🏢 [公司別統計] 第 ${i} 行數據:`, row);
-                }
+                if (firstCol.includes('總計') || secondCol.includes('總計') || firstCol === 'Grand Total') break;
+                if (firstCol.includes('合計') || secondCol.includes('合計')) continue;
+                if (firstCol.includes('類別') || secondCol.includes('名稱') || secondCol.includes('開立張數')) continue;
 
-                const companyData = [];
-                let total = 0;
-                const startIdx = 2;
-                for (let j = startIdx; j < startIdx + companies.length; j++) {
-                    const val = row[j] === '-' || row[j] === null || row[j] === undefined || row[j] === '' ? 0 : Number(row[j]);
-                    companyData.push(val);
-                    total += val;
-                }
+                if (firstCol) currentCategory = firstCol;
+                if (!secondCol) continue;
 
+                const companyData = companyCols.map(c => toNum(row[c]));
                 data.push({
-                    category: String(row[1] || ''),
-                    name: String(row[0]),
+                    category: currentCategory,
+                    name: secondCol,
                     company_data: companyData,
-                    total: total
+                    total: companyData.reduce((a, b) => a + b, 0)
                 });
             }
 
-            console.log('🏢 [公司別統計] 解析完成! 共解析到', data.length, '個表單');
-            console.log('🏢 [公司別統計] 前3個表單:', data.slice(0, 3));
-            console.log('🏢 [公司別統計] 最後3個表單:', data.slice(-3));
-
+            console.log('🏢 [公司別統計] 解析完成! 共', data.length, '個表單');
             return { companies, data };
         }
 
         function processSignatureSheet(sheet) {
             const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-            const months = [];
-            for (let i = 2; i < 15; i++) {
-                if (json[2] && json[2][i]) months.push(String(json[2][i]));
-            }
+            const { headerRowIdx, months, monthCols } = findMonthColumns(json);
+
+            // 版面: 主管姓名在月份起始欄的前一欄 (如"00001李志賢"為工號+姓名)
+            const nameCol = Math.max(0, (monthCols[0] ?? 1) - 1);
 
             const signers = [];
-            for (let i = 4; i < json.length; i++) {
+            for (let i = headerRowIdx + 1; i < json.length; i++) {
                 const row = json[i];
-                if (!row || !row[1]) break;
+                if (!row) continue;
 
-                const monthlyData = [];
-                let total = 0;
-                for (let j = 2; j < 2 + months.length; j++) {
-                    const val = row[j] === '-' || !row[j] ? 0 : Number(row[j]);
-                    monthlyData.push(val);
-                    total += val;
-                }
+                const raw = cellText(row[nameCol]);
+                if (!raw) continue;
+                if (raw.includes('總計') || raw.includes('合計')) break;
+                if (raw.includes('姓名') || cellText(row[monthCols[0]]).includes('次數')) continue;
 
+                const m = raw.match(/^(\d+)\s*(.*)$/);
+                const monthlyData = monthCols.map(c => toNum(row[c]));
                 signers.push({
-                    id: String(row[0] || ''),
-                    name: String(row[1]),
+                    id: m ? m[1] : '',
+                    name: m && m[2] ? m[2] : raw,
                     monthly_data: monthlyData,
-                    total: total
+                    total: monthlyData.reduce((a, b) => a + b, 0)
                 });
             }
 
+            console.log('✍️ [簽核次數] 月份:', months, '| 主管:', signers.length, '位');
             return { months, managers: signers };
         }
 
-        function processRejectSheet(sheet) {
+        // 共用解析: 版面為 第0欄=公司(合併儲存格,向下填充), 第1欄=姓名, 月份數據依 monthCols 取值
+        function processCompanyPersonSheet(sheet, label) {
             const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-            const months = [];
-            for (let i = 2; i < 15; i++) {
-                if (json[2] && json[2][i]) months.push(String(json[2][i]));
-            }
+            const { headerRowIdx, months, monthCols } = findMonthColumns(json);
 
-            const applicants = [];
+            const people = [];
             let currentCompany = '';
 
-            for (let i = 4; i < json.length; i++) {
+            for (let i = headerRowIdx + 1; i < json.length; i++) {
                 const row = json[i];
-                if (!row || String(row[1] || '').includes('合計')) continue;
+                if (!row) continue;
 
-                if (row[0]) currentCompany = String(row[0]);
-                if (!row[1]) continue;
+                const firstCol = cellText(row[0]);
+                const secondCol = cellText(row[1]);
 
-                const monthlyData = [];
-                let total = 0;
-                for (let j = 2; j < 2 + months.length; j++) {
-                    const val = row[j] === '-' || !row[j] ? 0 : Number(row[j]);
-                    monthlyData.push(val);
-                    total += val;
-                }
+                // 跳過公司合計行 (如"a.炎洲 合計") 與總計行
+                if (firstCol.includes('合計') || firstCol.includes('總計') || secondCol.includes('合計')) continue;
+                // 跳過欄位標題行
+                if (firstCol === '公司' || secondCol.includes('姓名') || cellText(row[monthCols[0]]).includes('次數')) continue;
 
+                if (firstCol) currentCompany = firstCol;
+                if (!secondCol) continue;
+
+                const monthlyData = monthCols.map(c => toNum(row[c]));
+                const total = monthlyData.reduce((a, b) => a + b, 0);
                 if (total > 0) {
-                    applicants.push({
+                    people.push({
                         company: currentCompany,
-                        name: String(row[1]),
+                        name: secondCol,
                         monthly_data: monthlyData,
                         total: total
                     });
                 }
             }
 
-            return { months, applicants };
+            console.log(`${label} 月份:`, months, '| 人數:', people.length);
+            return { months, people };
+        }
+
+        function processRejectSheet(sheet) {
+            const { months, people } = processCompanyPersonSheet(sheet, '❌ [申請人被駁回]');
+            return { months, applicants: people };
         }
 
         function processManagerRejectSheet(sheet) {
-            const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-            const months = [];
-            for (let i = 2; i < 15; i++) {
-                if (json[2] && json[2][i]) months.push(String(json[2][i]));
-            }
-
-            const managers = [];
-            let currentCompany = '';
-
-            for (let i = 4; i < json.length; i++) {
-                const row = json[i];
-                if (!row || String(row[1] || '').includes('合計')) continue;
-
-                if (row[0]) currentCompany = String(row[0]);
-                if (!row[1]) continue;
-
-                const monthlyData = [];
-                let total = 0;
-                for (let j = 2; j < 2 + months.length; j++) {
-                    const val = row[j] === '-' || !row[j] ? 0 : Number(row[j]);
-                    monthlyData.push(val);
-                    total += val;
-                }
-
-                if (total > 0) {
-                    managers.push({
-                        company: currentCompany,
-                        name: String(row[1]),
-                        monthly_data: monthlyData,
-                        total: total
-                    });
-                }
-            }
-
-            return { months, managers };
+            const { months, people } = processCompanyPersonSheet(sheet, '⚠️ [主管駁回]');
+            return { months, managers: people };
         }
 
         function processApprovalTimeSheet(sheet) {
             const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
+            // 第一段: 流程超過10關的表單 (從"表單號碼"標題行之後,到第二段標題為止,筆數不固定)
+            let over10HeaderIdx = -1;
+            let secondSectionIdx = json.length;
+            for (let i = 0; i < json.length; i++) {
+                const firstCol = cellText(json[i] && json[i][0]);
+                if (over10HeaderIdx === -1 && firstCol === '表單號碼') {
+                    over10HeaderIdx = i;
+                    continue;
+                }
+                if (over10HeaderIdx > -1 && firstCol.includes('簽核時間統計')) {
+                    secondSectionIdx = i;
+                    break;
+                }
+            }
+
             const over10Forms = [];
-            for (let i = 3; i < 7; i++) {
-                const row = json[i];
-                if (row && row[0] && row[4]) {
+            if (over10HeaderIdx > -1) {
+                for (let i = over10HeaderIdx + 1; i < secondSectionIdx; i++) {
+                    const row = json[i];
+                    if (!row || !cellText(row[0])) continue;
+                    const steps = toNum(row[4]);
+                    if (steps <= 0) continue;
                     over10Forms.push({
-                        form_no: String(row[0]),
-                        subject: String(row[1] || ''),
-                        dept: String(row[2] || ''),
-                        applicant: String(row[3] || ''),
-                        steps: Number(row[4])
+                        form_no: cellText(row[0]),
+                        subject: cellText(row[1]),
+                        dept: cellText(row[2]),
+                        applicant: cellText(row[3]),
+                        steps: steps
                     });
+                }
+            }
+
+            // 第二段: 各關卡簽核時間 (從"流程順序"標題行之後開始)
+            let recordsStartIdx = secondSectionIdx + 4;
+            for (let i = secondSectionIdx; i < json.length; i++) {
+                if (cellText(json[i] && json[i][2]) === '流程順序') {
+                    recordsStartIdx = i + 1;
+                    break;
                 }
             }
 
@@ -1006,7 +1013,7 @@
             let currentForm = '';
             let currentSubject = '';
 
-            for (let i = 11; i < json.length; i++) {
+            for (let i = recordsStartIdx; i < json.length; i++) {
                 const row = json[i];
                 if (!row) continue;
 
@@ -1101,6 +1108,49 @@
             if (mins && mins !== '-') total += Number(mins);
             return total;
         }
+
+        // ============== 歷史分析報表清單 ==============
+        function renderHistoryList() {
+            const card = document.getElementById('historyCard');
+            const list = document.getElementById('historyList');
+            const index = bpmGetHistoryIndex();
+            if (!index.length) {
+                card.style.display = 'none';
+                return;
+            }
+            card.style.display = 'block';
+            list.innerHTML = index.map(e => {
+                const saved = e.savedAt ? new Date(e.savedAt).toLocaleString('zh-TW') : '';
+                return `
+                    <div class="history-item">
+                        <span class="history-month">${bpmFormatMonth(e.month)}</span>
+                        <span class="history-meta">${e.fileName || '—'}${saved ? ' · 保存於 ' + saved : ''}</span>
+                        <button class="history-open" onclick="openHistory('${e.month}')">開啟報表</button>
+                        <button class="history-delete" onclick="deleteHistoryEntry('${e.month}')">刪除</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function openHistory(month) {
+            const data = bpmLoadHistory(month);
+            if (!data) {
+                showError('讀取歷史資料失敗,該月份資料可能已損毀');
+                return;
+            }
+            const entry = bpmGetHistoryIndex().find(e => e.month === month);
+            sessionStorage.setItem('bpmAnalysisData', JSON.stringify(data));
+            sessionStorage.setItem('uploadedFileName', (entry && entry.fileName) || `歷史報表 ${bpmFormatMonth(month)}`);
+            window.location.href = 'results.html';
+        }
+
+        function deleteHistoryEntry(month) {
+            if (!confirm(`確定刪除 ${bpmFormatMonth(month)} 的歷史分析資料?`)) return;
+            bpmDeleteHistory(month);
+            renderHistoryList();
+        }
+
+        renderHistoryList();
 
         // 頁面加載完成時的測試日誌
         console.log('✅ ========================================');

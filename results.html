@@ -553,6 +553,16 @@
                 </button>
             </div>
             <div class="subtitle">檔案: <span id="uploadedFileName">-</span></div>
+            <div class="subtitle" id="historyBar" style="display: none; margin-top: 10px;">
+                📚 歷史報表:
+                <select id="historySelect" onchange="onHistorySelect(this.value)"
+                    style="padding: 6px 10px; border-radius: 8px; border: none; font-size: 0.95em; cursor: pointer;">
+                </select>
+                <button onclick="deleteSelectedHistory()"
+                    style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.5); padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 0.9em; margin-left: 6px;">
+                    🗑 刪除此月
+                </button>
+            </div>
         </div>
 
         <!-- Tab Navigation -->
@@ -572,22 +582,22 @@
             <!-- 關鍵指標 -->
             <div class="stats-grid">
                 <div class="stat-card highlight">
-                    <div class="label">上月總流量 (2025年11月)</div>
+                    <div class="label" id="lastMonthTotalLabel">上月總流量</div>
                     <div class="value" id="lastMonthTotal">-</div>
                     <div class="unit">筆</div>
                 </div>
                 <div class="stat-card">
-                    <div class="label">13個月總流量</div>
+                    <div class="label" id="totalFormsLabel">總流量</div>
                     <div class="value" id="totalForms">-</div>
                     <div class="unit">筆</div>
                 </div>
                 <div class="stat-card">
-                    <div class="label">表單種類</div>
+                    <div class="label" id="formTypesLabel">表單種類</div>
                     <div class="value" id="formTypes">-</div>
                     <div class="unit">種</div>
                 </div>
                 <div class="stat-card">
-                    <div class="label">月平均流量</div>
+                    <div class="label" id="avgMonthlyLabel">月平均流量</div>
                     <div class="value" id="avgMonthly">-</div>
                     <div class="unit">筆</div>
                 </div>
@@ -675,22 +685,22 @@
             <!-- 關鍵指標 -->
             <div class="stats-grid">
                 <div class="stat-card highlight">
-                    <div class="label">公司總數</div>
+                    <div class="label" id="companyCountLabel">公司總數</div>
                     <div class="value" id="companyCount">-</div>
                     <div class="unit">家</div>
                 </div>
                 <div class="stat-card">
-                    <div class="label">總流量 (13個月)</div>
+                    <div class="label" id="companyTotalFormsLabel">總流量</div>
                     <div class="value" id="companyTotalForms">-</div>
                     <div class="unit">筆</div>
                 </div>
                 <div class="stat-card">
-                    <div class="label">最大流量公司</div>
+                    <div class="label" id="topCompanyLabel">最大流量公司</div>
                     <div class="value" id="topCompany" style="font-size: 1.8em;">-</div>
                     <div class="unit">流量</div>
                 </div>
                 <div class="stat-card">
-                    <div class="label">平均每公司流量</div>
+                    <div class="label" id="avgPerCompanyLabel">平均每公司流量</div>
                     <div class="value" id="avgPerCompany">-</div>
                     <div class="unit">筆</div>
                 </div>
@@ -766,22 +776,22 @@
             <!-- 關鍵指標 -->
             <div class="stats-grid">
                 <div class="stat-card highlight">
-                    <div class="label">上月簽核總次數 (2025年11月)</div>
+                    <div class="label" id="lastMonthSignTotalLabel">上月簽核總次數</div>
                     <div class="value" id="lastMonthSignTotal">-</div>
                     <div class="unit">次</div>
                 </div>
                 <div class="stat-card">
-                    <div class="label">13個月總簽核次數</div>
+                    <div class="label" id="totalSignsLabel">總簽核次數</div>
                     <div class="value" id="totalSigns">-</div>
                     <div class="unit">次</div>
                 </div>
                 <div class="stat-card">
-                    <div class="label">簽核主管人數</div>
+                    <div class="label" id="managerCountLabel">簽核主管人數</div>
                     <div class="value" id="managerCount">-</div>
                     <div class="unit">位</div>
                 </div>
                 <div class="stat-card">
-                    <div class="label">月平均簽核次數</div>
+                    <div class="label" id="avgSignMonthlyLabel">月平均簽核次數</div>
                     <div class="value" id="avgSignMonthly">-</div>
                     <div class="unit">次</div>
                 </div>
@@ -857,22 +867,22 @@
             <!-- 關鍵指標 -->
             <div class="stats-grid">
                 <div class="stat-card highlight">
-                    <div class="label">上月被駁回次數 (2025年11月)</div>
+                    <div class="label" id="lastMonthRejectTotalLabel">上月被駁回次數</div>
                     <div class="value" id="lastMonthRejectTotal">-</div>
                     <div class="unit">次</div>
                 </div>
                 <div class="stat-card">
-                    <div class="label">13個月總被駁回次數</div>
+                    <div class="label" id="totalRejectsLabel">總被駁回次數</div>
                     <div class="value" id="totalRejects">-</div>
                     <div class="unit">次</div>
                 </div>
                 <div class="stat-card">
-                    <div class="label">有駁回記錄人數</div>
+                    <div class="label" id="applicantCountLabel">有駁回記錄人數</div>
                     <div class="value" id="applicantCount">-</div>
                     <div class="unit">人</div>
                 </div>
                 <div class="stat-card">
-                    <div class="label">被駁回超過3次</div>
+                    <div class="label" id="over3CountLabel">被駁回超過3次</div>
                     <div class="value" id="over3Count">-</div>
                     <div class="unit">人</div>
                 </div>
@@ -942,22 +952,22 @@
         <div id="manager-reject-tab" class="tab-content">
             <div class="stats-grid">
                 <div class="stat-card highlight">
-                    <div class="label">上月主管駁回次數 (2025年11月)</div>
+                    <div class="label" id="lastMonthMgrRejectTotalLabel">上月主管駁回次數</div>
                     <div class="value" id="lastMonthMgrRejectTotal">-</div>
                     <div class="unit">次</div>
                 </div>
                 <div class="stat-card">
-                    <div class="label">13個月總駁回次數</div>
+                    <div class="label" id="totalMgrRejectsLabel">總駁回次數</div>
                     <div class="value" id="totalMgrRejects">-</div>
                     <div class="unit">次</div>
                 </div>
                 <div class="stat-card">
-                    <div class="label">有駁回記錄主管數</div>
+                    <div class="label" id="mgrRejectCountLabel">有駁回記錄主管數</div>
                     <div class="value" id="mgrRejectCount">-</div>
                     <div class="unit">位</div>
                 </div>
                 <div class="stat-card">
-                    <div class="label">駁回超過3次主管</div>
+                    <div class="label" id="mgrOver3CountLabel">駁回超過3次主管</div>
                     <div class="value" id="mgrOver3Count">-</div>
                     <div class="unit">位</div>
                 </div>
@@ -1028,22 +1038,22 @@
         <div id="approval-time-tab" class="tab-content">
             <div class="stats-grid">
                 <div class="stat-card highlight">
-                    <div class="label">總簽核記錄數</div>
+                    <div class="label" id="totalApprovalRecordsLabel">總簽核記錄數</div>
                     <div class="value" id="totalApprovalRecords">-</div>
                     <div class="unit">筆</div>
                 </div>
                 <div class="stat-card">
-                    <div class="label">表單總數</div>
+                    <div class="label" id="totalApprovalFormsLabel">表單總數</div>
                     <div class="value" id="totalApprovalForms">-</div>
                     <div class="unit">筆</div>
                 </div>
                 <div class="stat-card">
-                    <div class="label">流程超過10關</div>
+                    <div class="label" id="over10FormsCountLabel">流程超過10關</div>
                     <div class="value" id="over10FormsCount">-</div>
                     <div class="unit">筆</div>
                 </div>
                 <div class="stat-card">
-                    <div class="label">簽核超過3天</div>
+                    <div class="label" id="over3DaysCountLabel">簽核超過3天</div>
                     <div class="value" id="over3DaysCount">-</div>
                     <div class="unit">筆</div>
                 </div>
@@ -1140,6 +1150,7 @@
         </div>
     </div>
 
+    <script src="bpm-history.js"></script>
     <script>
         // 從JSON載入資料
 
@@ -1147,8 +1158,21 @@
         let monthlyData, companyData, signatureData, rejectData, managerRejectData, approvalTimeData;
 
         (function loadDataFromSession() {
-            const storedData = sessionStorage.getItem('bpmAnalysisData');
-            const fileName = sessionStorage.getItem('uploadedFileName');
+            let storedData = sessionStorage.getItem('bpmAnalysisData');
+            let fileName = sessionStorage.getItem('uploadedFileName');
+
+            // 本次未上傳時,自動載入最近一個月的歷史資料
+            if (!storedData) {
+                const index = bpmGetHistoryIndex();
+                if (index.length) {
+                    const hist = bpmLoadHistory(index[0].month);
+                    if (hist) {
+                        storedData = JSON.stringify(hist);
+                        fileName = index[0].fileName || `歷史報表 ${bpmFormatMonth(index[0].month)}`;
+                        console.log('📚 自動載入歷史資料:', bpmFormatMonth(index[0].month));
+                    }
+                }
+            }
 
             if (!storedData) {
                 alert('沒有找到分析數據，請先上傳Excel檔案');
@@ -1185,6 +1209,36 @@
                 window.location.href = 'index.html';
             }
         })();
+
+        // ===== 月份輔助函數 =====
+        // "202606" / "2026/06" → "2026年6月"
+        function formatYM(m) {
+            const t = String(m || '').replace(/\D/g, '');
+            if (t.length < 6) return String(m || '-');
+            return `${t.substring(0, 4)}年${parseInt(t.substring(4, 6), 10)}月`;
+        }
+
+        // 取"上月"(最後一個完整月份)索引: 若資料最後一欄是當月(進行中),則往前退一個月
+        function lastMonthIndex(months) {
+            if (!months || months.length === 0) return 0;
+            let idx = months.length - 1;
+            const now = new Date();
+            const cur = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`;
+            if (idx > 0 && String(months[idx]).replace(/\D/g, '').substring(0, 6) === cur) idx--;
+            return idx;
+        }
+
+        // 月份陣列 → "2025年6月～2026年6月"
+        function formatRange(months) {
+            if (!months || months.length === 0) return '';
+            if (months.length === 1) return formatYM(months[0]);
+            return `${formatYM(months[0])}～${formatYM(months[months.length - 1])}`;
+        }
+
+        function setLabel(id, text) {
+            const el = document.getElementById(id);
+            if (el) el.textContent = text;
+        }
 
         let monthlyCharts = {};
         let companyCharts = {};
@@ -1229,8 +1283,8 @@
             const data = monthlyData.data;
 
             const totalForms = data.reduce((sum, item) => sum + item.total, 0);
-            const lastMonthIdx = months.length - 1;
-            const lastMonthTotal = data.reduce((sum, item) => sum + item.monthly_data[lastMonthIdx], 0);
+            const lastMonthIdx = lastMonthIndex(months);
+            const lastMonthTotal = data.reduce((sum, item) => sum + (item.monthly_data[lastMonthIdx] || 0), 0);
             const avgMonthly = Math.round(totalForms / months.length);
             const formTypes = data.length;
 
@@ -1255,6 +1309,7 @@
             return {
                 totalForms,
                 lastMonthTotal,
+                lastMonthIdx,
                 avgMonthly,
                 formTypes,
                 categoryStats,
@@ -1265,6 +1320,11 @@
         }
 
         function updateMonthlyKeyMetrics(stats) {
+            const range = formatRange(stats.months);
+            setLabel('lastMonthTotalLabel', `上月總流量 (${formatYM(stats.months[stats.lastMonthIdx])})`);
+            setLabel('totalFormsLabel', `${stats.months.length}個月總流量 (${range})`);
+            setLabel('formTypesLabel', `表單種類 (${range})`);
+            setLabel('avgMonthlyLabel', `月平均流量 (${range})`);
             document.getElementById('lastMonthTotal').textContent = stats.lastMonthTotal.toLocaleString();
             document.getElementById('totalForms').textContent = stats.totalForms.toLocaleString();
             document.getElementById('formTypes').textContent = stats.formTypes;
@@ -1273,20 +1333,21 @@
 
         function generateMonthlyInsights(stats) {
             const insights = [];
+            const lastMonthName = formatYM(stats.months[stats.lastMonthIdx]);
 
-            insights.push(`上月(2025年11月)EIP電子簽核表單流量為 <strong>${stats.lastMonthTotal.toLocaleString()}</strong> 筆`);
+            insights.push(`上月(${lastMonthName})EIP電子簽核表單流量為 <strong>${stats.lastMonthTotal.toLocaleString()}</strong> 筆`);
 
             const lastMonthCategories = {};
             stats.data.forEach(item => {
                 if (!lastMonthCategories[item.category]) {
                     lastMonthCategories[item.category] = 0;
                 }
-                lastMonthCategories[item.category] += item.monthly_data[stats.months.length - 1];
+                lastMonthCategories[item.category] += item.monthly_data[stats.lastMonthIdx] || 0;
             });
             const topCategory = Object.entries(lastMonthCategories).sort((a, b) => b[1] - a[1])[0];
             insights.push(`上月流量最大的類別為 <strong>${topCategory[0]}</strong>,共 <strong>${topCategory[1].toLocaleString()}</strong> 筆`);
 
-            insights.push(`13個月期間,流量最大的表單為 <strong>${stats.topForms[0].name}</strong>,總計 <strong>${stats.topForms[0].total.toLocaleString()}</strong> 筆`);
+            insights.push(`${stats.months.length}個月期間,流量最大的表單為 <strong>${stats.topForms[0].name}</strong>,總計 <strong>${stats.topForms[0].total.toLocaleString()}</strong> 筆`);
 
             const categories = Object.entries(stats.categoryStats).sort((a, b) => b[1].total - a[1].total);
             insights.push(`最活躍的類別為 <strong>${categories[0][0]}</strong>,佔總流量的 <strong>${((categories[0][1].total / stats.totalForms) * 100).toFixed(1)}%</strong>`);
@@ -1582,8 +1643,8 @@
                 const total = Number.isFinite(item.total) ? item.total : 0;
                 const monthCount = stats.months.length || 0;
                 const avg = monthCount > 0 ? Math.round(total / monthCount) : 0;
-                const lastMonth = item.monthly_data[monthCount - 1] ?? 0;
-                const prevMonth = item.monthly_data[monthCount - 2] ?? 0;
+                const lastMonth = item.monthly_data[stats.lastMonthIdx] ?? 0;
+                const prevMonth = item.monthly_data[stats.lastMonthIdx - 1] ?? 0;
 
                 let trend = '→';
                 let trendColor = '#666';
@@ -1630,7 +1691,7 @@
             const data = companyData.data;
             const months = companyData.months || [];
 
-            // 計算13個月總流量
+            // 計算全期間總流量
             const totalForms = data.reduce((sum, item) => sum + item.total, 0);
 
             // 計算當月(最後一個月)的流量
@@ -1699,7 +1760,19 @@
             };
         }
 
+        // 公司別工作表無月份欄,月數取自月度統計資料
+        function getMonthSpanText() {
+            const n = monthlyData && monthlyData.months ? monthlyData.months.length : 0;
+            return n > 0 ? `${n}個月` : '統計期間';
+        }
+
         function updateCompanyKeyMetrics(stats) {
+            // 公司別工作表無月份欄,日期區間取自月度統計資料
+            const range = formatRange(monthlyData && monthlyData.months);
+            setLabel('companyCountLabel', `公司總數 (${range})`);
+            setLabel('companyTotalFormsLabel', `總流量 (${range})`);
+            setLabel('topCompanyLabel', `最大流量公司 (${range})`);
+            setLabel('avgPerCompanyLabel', `平均每公司流量 (${range})`);
             document.getElementById('companyCount').textContent = stats.companyCount;
             document.getElementById('companyTotalForms').textContent = stats.totalForms.toLocaleString();
             document.getElementById('topCompany').textContent = stats.topCompany[0];
@@ -1708,17 +1781,18 @@
 
         function generateCompanyInsights(stats) {
             const insights = [];
+            const span = getMonthSpanText();
 
-            insights.push(`共有 <strong>${stats.companyCount}</strong> 家公司使用表單系統,13個月總流量為 <strong>${stats.totalForms.toLocaleString()}</strong> 筆`);
+            insights.push(`共有 <strong>${stats.companyCount}</strong> 家公司使用表單系統,${span}總流量為 <strong>${stats.totalForms.toLocaleString()}</strong> 筆`);
 
             const sortedCompanies = Object.entries(stats.companyStats).sort((a, b) => b[1] - a[1]);
-            insights.push(`13個月期間流量最大的公司為 <strong>${sortedCompanies[0][0]}</strong>,共 <strong>${sortedCompanies[0][1].toLocaleString()}</strong> 筆 (佔 ${((sortedCompanies[0][1] / stats.totalForms) * 100).toFixed(1)}%)`);
+            insights.push(`${span}期間流量最大的公司為 <strong>${sortedCompanies[0][0]}</strong>,共 <strong>${sortedCompanies[0][1].toLocaleString()}</strong> 筆 (佔 ${((sortedCompanies[0][1] / stats.totalForms) * 100).toFixed(1)}%)`);
             insights.push(`前三大公司為: <strong>${sortedCompanies[0][0]}</strong> (${sortedCompanies[0][1].toLocaleString()}筆)、<strong>${sortedCompanies[1][0]}</strong> (${sortedCompanies[1][1].toLocaleString()}筆)、<strong>${sortedCompanies[2][0]}</strong> (${sortedCompanies[2][1].toLocaleString()}筆)`);
 
             const categories = Object.entries(stats.categoryStats).sort((a, b) => b[1].total - a[1].total);
             insights.push(`所有公司中,最常使用的類別為 <strong>${categories[0][0]}</strong> (${categories[0][1].total.toLocaleString()}筆)`);
 
-            insights.push(`平均每家公司流量為 <strong>${stats.avgPerCompany.toLocaleString()}</strong> 筆 (13個月平均)`);
+            insights.push(`平均每家公司流量為 <strong>${stats.avgPerCompany.toLocaleString()}</strong> 筆 (${span}平均)`);
 
             document.getElementById('companyInsights').innerHTML = insights.map(insight => `<li>${insight}</li>`).join('');
         }
@@ -1980,8 +2054,8 @@
             const managers = signatureData.managers;
 
             const totalSigns = managers.reduce((sum, mgr) => sum + mgr.total, 0);
-            const lastMonthIdx = months.length - 1;
-            const lastMonthSignTotal = managers.reduce((sum, mgr) => sum + mgr.monthly_data[lastMonthIdx], 0);
+            const lastMonthIdx = lastMonthIndex(months);
+            const lastMonthSignTotal = managers.reduce((sum, mgr) => sum + (mgr.monthly_data[lastMonthIdx] || 0), 0);
             const avgSignMonthly = Math.round(totalSigns / months.length);
             const managerCount = managers.length;
 
@@ -2001,6 +2075,7 @@
             return {
                 totalSigns,
                 lastMonthSignTotal,
+                lastMonthIdx,
                 avgSignMonthly,
                 managerCount,
                 sortedManagers,
@@ -2012,6 +2087,11 @@
         }
 
         function updateSignatureKeyMetrics(stats) {
+            const range = formatRange(stats.months);
+            setLabel('lastMonthSignTotalLabel', `上月簽核總次數 (${formatYM(stats.months[stats.lastMonthIdx])})`);
+            setLabel('totalSignsLabel', `${stats.months.length}個月總簽核次數 (${range})`);
+            setLabel('managerCountLabel', `簽核主管人數 (${range})`);
+            setLabel('avgSignMonthlyLabel', `月平均簽核次數 (${range})`);
             document.getElementById('lastMonthSignTotal').textContent = stats.lastMonthSignTotal.toLocaleString();
             document.getElementById('totalSigns').textContent = stats.totalSigns.toLocaleString();
             document.getElementById('managerCount').textContent = stats.managerCount;
@@ -2021,9 +2101,9 @@
         function generateSignatureInsights(stats) {
             const insights = [];
 
-            insights.push(`上月(2025年11月)總簽核次數為 <strong>${stats.lastMonthSignTotal.toLocaleString()}</strong> 次`);
+            insights.push(`上月(${formatYM(stats.months[stats.lastMonthIdx])})總簽核次數為 <strong>${stats.lastMonthSignTotal.toLocaleString()}</strong> 次`);
 
-            insights.push(`13個月期間,共有 <strong>${stats.managerCount}</strong> 位主管進行簽核,總簽核次數為 <strong>${stats.totalSigns.toLocaleString()}</strong> 次`);
+            insights.push(`${stats.months.length}個月期間,共有 <strong>${stats.managerCount}</strong> 位主管進行簽核,總簽核次數為 <strong>${stats.totalSigns.toLocaleString()}</strong> 次`);
 
             insights.push(`簽核次數最多的主管為 <strong>${stats.sortedManagers[0].name}</strong>,共簽核 <strong>${stats.sortedManagers[0].total.toLocaleString()}</strong> 次`);
 
@@ -2031,7 +2111,7 @@
             insights.push(`平均每位主管簽核 <strong>${avgPerManager.toLocaleString()}</strong> 次,月平均 <strong>${Math.round(avgPerManager / stats.months.length).toLocaleString()}</strong> 次`);
 
             if (stats.over300.length > 0) {
-                const names = stats.over300.map(m => `<strong>${m.name}</strong> (${m.monthly_data[stats.months.length - 1]}次)`).join('、');
+                const names = stats.over300.map(m => `<strong>${m.name}</strong> (${m.monthly_data[stats.lastMonthIdx]}次)`).join('、');
                 insights.push(`上月單月簽核次數超過300次的主管為: ${names}`);
             } else {
                 insights.push(`上月單月簽核次數超過300次的主管為: <strong>無</strong>`);
@@ -2315,8 +2395,8 @@
             const months = rejectData.months;
             const applicants = rejectData.applicants;
             const totalRejects = applicants.reduce((sum, app) => sum + app.total, 0);
-            const lastMonthIdx = months.length - 1;
-            const lastMonthRejectTotal = applicants.reduce((sum, app) => sum + app.monthly_data[lastMonthIdx], 0);
+            const lastMonthIdx = lastMonthIndex(months);
+            const lastMonthRejectTotal = applicants.reduce((sum, app) => sum + (app.monthly_data[lastMonthIdx] || 0), 0);
             const applicantCount = applicants.length;
             const monthlyTotals = Array(months.length).fill(0);
             applicants.forEach(app => {
@@ -2331,10 +2411,15 @@
                 if (!companyStats[app.company]) companyStats[app.company] = 0;
                 companyStats[app.company] += app.total;
             });
-            return { totalRejects, lastMonthRejectTotal, applicantCount, over3Count: over3.length, sortedApplicants, monthlyTotals, over3, companyStats, months, applicants };
+            return { totalRejects, lastMonthRejectTotal, lastMonthIdx, applicantCount, over3Count: over3.length, sortedApplicants, monthlyTotals, over3, companyStats, months, applicants };
         }
 
         function updateRejectKeyMetrics(stats) {
+            const range = formatRange(stats.months);
+            setLabel('lastMonthRejectTotalLabel', `上月被駁回次數 (${formatYM(stats.months[stats.lastMonthIdx])})`);
+            setLabel('totalRejectsLabel', `${stats.months.length}個月總被駁回次數 (${range})`);
+            setLabel('applicantCountLabel', `有駁回記錄人數 (${range})`);
+            setLabel('over3CountLabel', `被駁回超過3次 (${range})`);
             document.getElementById('lastMonthRejectTotal').textContent = stats.lastMonthRejectTotal.toLocaleString();
             document.getElementById('totalRejects').textContent = stats.totalRejects.toLocaleString();
             document.getElementById('applicantCount').textContent = stats.applicantCount;
@@ -2343,8 +2428,8 @@
 
         function generateRejectInsights(stats) {
             const insights = [];
-            insights.push(`上月(2025年11月)被駁回次數為 <strong>${stats.lastMonthRejectTotal.toLocaleString()}</strong> 次`);
-            insights.push(`13個月期間,共有 <strong>${stats.applicantCount}</strong> 位申請人曾被駁回,總駁回次數為 <strong>${stats.totalRejects.toLocaleString()}</strong> 次`);
+            insights.push(`上月(${formatYM(stats.months[stats.lastMonthIdx])})被駁回次數為 <strong>${stats.lastMonthRejectTotal.toLocaleString()}</strong> 次`);
+            insights.push(`${stats.months.length}個月期間,共有 <strong>${stats.applicantCount}</strong> 位申請人曾被駁回,總駁回次數為 <strong>${stats.totalRejects.toLocaleString()}</strong> 次`);
             insights.push(`被駁回次數最多的申請人為 <strong>${stats.sortedApplicants[0].name}</strong> (${stats.sortedApplicants[0].company}),共被駁回 <strong>${stats.sortedApplicants[0].total}</strong> 次`);
             insights.push(`被駁回超過3次的申請人共有 <strong>${stats.over3Count}</strong> 位`);
             const sortedCompanies = Object.entries(stats.companyStats).sort((a, b) => b[1] - a[1]);
@@ -2436,8 +2521,8 @@
             const months = managerRejectData.months;
             const managers = managerRejectData.managers;
             const totalRejects = managers.reduce((sum, mgr) => sum + mgr.total, 0);
-            const lastMonthIdx = months.length - 1;
-            const lastMonthRejectTotal = managers.reduce((sum, mgr) => sum + mgr.monthly_data[lastMonthIdx], 0);
+            const lastMonthIdx = lastMonthIndex(months);
+            const lastMonthRejectTotal = managers.reduce((sum, mgr) => sum + (mgr.monthly_data[lastMonthIdx] || 0), 0);
             const managerCount = managers.length;
             const monthlyTotals = Array(months.length).fill(0);
             managers.forEach(mgr => {
@@ -2452,10 +2537,15 @@
                 if (!companyStats[mgr.company]) companyStats[mgr.company] = 0;
                 companyStats[mgr.company] += mgr.total;
             });
-            return { totalRejects, lastMonthRejectTotal, managerCount, over3Count: over3.length, sortedManagers, monthlyTotals, over3, companyStats, months, managers };
+            return { totalRejects, lastMonthRejectTotal, lastMonthIdx, managerCount, over3Count: over3.length, sortedManagers, monthlyTotals, over3, companyStats, months, managers };
         }
 
         function updateManagerRejectKeyMetrics(stats) {
+            const range = formatRange(stats.months);
+            setLabel('lastMonthMgrRejectTotalLabel', `上月主管駁回次數 (${formatYM(stats.months[stats.lastMonthIdx])})`);
+            setLabel('totalMgrRejectsLabel', `${stats.months.length}個月總駁回次數 (${range})`);
+            setLabel('mgrRejectCountLabel', `有駁回記錄主管數 (${range})`);
+            setLabel('mgrOver3CountLabel', `駁回超過3次主管 (${range})`);
             document.getElementById('lastMonthMgrRejectTotal').textContent = stats.lastMonthRejectTotal.toLocaleString();
             document.getElementById('totalMgrRejects').textContent = stats.totalRejects.toLocaleString();
             document.getElementById('mgrRejectCount').textContent = stats.managerCount;
@@ -2464,8 +2554,8 @@
 
         function generateManagerRejectInsights(stats) {
             const insights = [];
-            insights.push(`上月(2025年11月)主管駁回次數為 <strong>${stats.lastMonthRejectTotal.toLocaleString()}</strong> 次`);
-            insights.push(`13個月期間,共有 <strong>${stats.managerCount}</strong> 位主管曾駁回申請,總駁回次數為 <strong>${stats.totalRejects.toLocaleString()}</strong> 次`);
+            insights.push(`上月(${formatYM(stats.months[stats.lastMonthIdx])})主管駁回次數為 <strong>${stats.lastMonthRejectTotal.toLocaleString()}</strong> 次`);
+            insights.push(`${stats.months.length}個月期間,共有 <strong>${stats.managerCount}</strong> 位主管曾駁回申請,總駁回次數為 <strong>${stats.totalRejects.toLocaleString()}</strong> 次`);
             insights.push(`駁回次數最多的主管為 <strong>${stats.sortedManagers[0].name}</strong> (${stats.sortedManagers[0].company}),共駁回 <strong>${stats.sortedManagers[0].total}</strong> 次`);
             insights.push(`駁回超過3次的主管共有 <strong>${stats.over3Count}</strong> 位`);
             const sortedCompanies = Object.entries(stats.companyStats).sort((a, b) => b[1] - a[1]);
@@ -2595,6 +2685,14 @@
         }
 
         function updateApprovalTimeKeyMetrics(stats) {
+            // Excel 註記: 資料範圍為上月份簽核完成的表單
+            const months = monthlyData && monthlyData.months ? monthlyData.months : [];
+            const lastM = months.length ? formatYM(months[lastMonthIndex(months)]) : '';
+            const suffix = lastM ? ` (${lastM}簽核完成)` : '';
+            setLabel('totalApprovalRecordsLabel', `總簽核記錄數${suffix}`);
+            setLabel('totalApprovalFormsLabel', `表單總數${suffix}`);
+            setLabel('over10FormsCountLabel', `流程超過10關${suffix}`);
+            setLabel('over3DaysCountLabel', `簽核超過3天${suffix}`);
             document.getElementById('totalApprovalRecords').textContent = stats.totalRecords.toLocaleString();
             document.getElementById('totalApprovalForms').textContent = stats.totalFormsCount;
             document.getElementById('over10FormsCount').textContent = stats.over10Count;
@@ -2844,10 +2942,54 @@
             document.getElementById('updateTime').textContent = timeStr;
         }
 
+        // ============== 歷史報表切換 ==============
+        function populateHistorySelect() {
+            const bar = document.getElementById('historyBar');
+            const sel = document.getElementById('historySelect');
+            if (!bar || !sel) return;
+
+            const index = bpmGetHistoryIndex();
+            if (!index.length) {
+                bar.style.display = 'none';
+                return;
+            }
+
+            // 目前顯示中的報表月份
+            const currentMonth = bpmReportMonth({ monthly: monthlyData });
+
+            bar.style.display = 'block';
+            sel.innerHTML = index.map(e => {
+                const selected = e.month === currentMonth ? 'selected' : '';
+                return `<option value="${e.month}" ${selected}>${bpmFormatMonth(e.month)}${e.fileName ? ' - ' + e.fileName : ''}</option>`;
+            }).join('');
+        }
+
+        function onHistorySelect(month) {
+            const data = bpmLoadHistory(month);
+            if (!data) {
+                alert('讀取歷史資料失敗,該月份資料可能已損毀');
+                populateHistorySelect();
+                return;
+            }
+            const entry = bpmGetHistoryIndex().find(e => e.month === month);
+            sessionStorage.setItem('bpmAnalysisData', JSON.stringify(data));
+            sessionStorage.setItem('uploadedFileName', (entry && entry.fileName) || `歷史報表 ${bpmFormatMonth(month)}`);
+            location.reload();
+        }
+
+        function deleteSelectedHistory() {
+            const sel = document.getElementById('historySelect');
+            if (!sel || !sel.value) return;
+            if (!confirm(`確定刪除 ${bpmFormatMonth(sel.value)} 的歷史分析資料?`)) return;
+            bpmDeleteHistory(sel.value);
+            populateHistorySelect();
+        }
+
         // 初始化
         function init() {
             // 只初始化月度統計（預設顯示的分頁）
             initMonthlyTab();
+            populateHistorySelect();
             updateTime();
         }
 
